@@ -51,6 +51,11 @@ class OrdemServico(models.Model):
         default=Status.EM_ANDAMENTO
     )
 
+    codigo_acesso = models.CharField(
+       max_length=8,
+        unique=True
+    )
+
     cliente = models.ForeignKey(
         Cliente,
         on_delete=models.PROTECT
