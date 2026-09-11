@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Atendimento{% endblock %}
+
+{% block content %}
+
+<h1>Atendimento</h1>
+
+<p>Informe o celular do cliente ou a placa da moto.</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    <label for="busca">Celular ou placa:</label>
+    <input type="text" id="busca" name="busca">
+
+    <button type="submit">Buscar</button>
+</form>
+
+{% endblock %}
