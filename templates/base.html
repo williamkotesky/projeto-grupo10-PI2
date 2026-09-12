@@ -18,6 +18,9 @@
             <ul>
                 {% if user.is_authenticated %}
                     <li>
+                        <a href="{% url 'atendimento' %}">Atendimento</a>
+                    </li>
+                    <li>
                         <form method="post" action="{% url 'logout' %}">
                             {% csrf_token %}
                             <button type="submit">Logout</button>

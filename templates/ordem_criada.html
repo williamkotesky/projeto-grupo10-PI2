@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Ordem de Serviço Criada{% endblock %}
+
+{% block content %}
+
+<h1>Ordem de Serviço criada</h1>
+
+<p>
+    A ordem de serviço foi criada com sucesso.
+</p>
+
+<p>
+    <strong>Número da OS:</strong>
+    {{ ordem.id_ordem }}
+</p>
+
+<p>
+    <strong>Código de acesso:</strong>
+    {{ ordem.codigo_acesso }}
+</p>
+
+<p>
+    <strong>Status:</strong>
+    {{ ordem.get_status_ordem_display }}
+</p>
+
+<p>
+    <strong>Descrição:</strong>
+    {{ ordem.descricao }}
+</p>
+
+<p>
+    <strong>Moto:</strong>
+    {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
+    - {{ ordem.moto.placa }}
+</p>
+
+<p>
+    <strong>Cliente:</strong>
+    {{ ordem.cliente.nome }}
+</p>
+
+<a href="{% url 'atendimento' %}">
+    Voltar para atendimento
+</a>
+
+{% endblock %}

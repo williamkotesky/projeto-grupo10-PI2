@@ -1,5 +1,15 @@
+import secrets
+import string
+
 from django.db import models
 
+def gerar_codigo_acesso():
+    caracteres = string.ascii_uppercase + string.digits
+
+    return "".join(
+        secrets.choice(caracteres)
+        for _ in range(8)
+    )
 
 class Cliente(models.Model):
     id_cliente = models.AutoField(primary_key=True)
@@ -31,20 +41,32 @@ class OrdemServico(models.Model):
         FINALIZADA = "finalizada", "Finalizada"
 
     id_ordem = models.AutoField(primary_key=True)
+
     descricao = models.TextField()
+
     custo_pecas = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        null=True,
+        blank=True
     )
+
     custo_servico = models.DecimalField(
         max_digits=10,
-        decimal_places=2
+        decimal_places=2,
+        null=True,
+        blank=True
     )
-    data_abertura = models.DateTimeField()
+
+    data_abertura = models.DateTimeField(
+        auto_now_add=True
+    )
+
     data_fechamento = models.DateTimeField(
         null=True,
         blank=True
     )
+
     status_ordem = models.CharField(
         max_length=20,
         choices=Status.choices,
@@ -52,8 +74,9 @@ class OrdemServico(models.Model):
     )
 
     codigo_acesso = models.CharField(
-       max_length=8,
-        unique=True
+        max_length=8,
+        unique=True,
+        default=gerar_codigo_acesso
     )
 
     cliente = models.ForeignKey(
@@ -65,6 +88,6 @@ class OrdemServico(models.Model):
         Moto,
         on_delete=models.PROTECT
     )
-    
+
     def __str__(self):
         return f"OS #{self.id_ordem}"

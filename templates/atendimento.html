@@ -7,14 +7,80 @@
 <h1>Atendimento</h1>
 
 <p>Informe o celular do cliente ou a placa da moto.</p>
-
+{% if erro %}
+    <p style="color:crimson">{{ erro }}</p>
+{% endif %}
 <form method="post">
     {% csrf_token %}
 
     <label for="busca">Celular ou placa:</label>
-    <input type="text" id="busca" name="busca">
+    <input type="text" id="busca" name="busca" required maxlength="20">
 
     <button type="submit">Buscar</button>
 </form>
+{% if tipo_busca %}
+    <hr>
+
+    {% if tipo_busca == "celular" %}
+
+        <h2>Busca por celular</h2>
+
+        {% if cliente %}
+            <h2>Cliente encontrado</h2>
+        
+            <p>Nome: {{ cliente.nome }}</p>
+            <p>Celular: {{ cliente.numero_celular }}</p>
+        
+            <h3>Motos cadastradas</h3>
+        
+            {% if motos %}
+                <ul>
+                    {% for moto in motos %}
+                        <form method="post">
+                            {% csrf_token %}
+                    
+                            <input type="hidden" name="moto_id" value="{{ moto.id_moto }}">
+                            <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
+                    
+                            <p>
+                                {{ moto.marca }} {{ moto.modelo }} - {{ moto.placa }}
+                    
+                                <button type="submit" name="acao" value="selecionar_moto">
+                                    Selecionar
+                                </button>
+                            </p>
+                        </form>
+                    {% endfor %}
+                </ul>
+                <form method="post">
+                    {% csrf_token %}
+                
+                    <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
+                
+                    <button type="submit" name="acao" value="nova_moto">
+                        Cadastrar nova moto
+                    </button>
+                </form>
+            {% else %}
+                <p>Este cliente ainda não possui motos cadastradas.</p>
+            {% endif %}
+        
+        {% else %}
+            <p>Nenhum cliente encontrado.</p>
+        {% endif %}
+
+    {% elif tipo_busca == "placa" %}
+
+        <h2>Busca por placa</h2>
+
+        {% if moto %}
+            <p>Moto encontrada: {{ moto.marca }} {{ moto.modelo }}</p>
+            <p>Cliente: {{ moto.cliente.nome }}</p>
+        {% else %}
+            <p>Nenhuma moto encontrada.</p>
+        {% endif %}
+
+    {% endif %}
+{% endif %}
 
 {% endblock %}
