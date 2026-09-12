@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Ordem de Serviço{% endblock %}
+
+{% block content %}
+
+<h1>Nova Ordem de Serviço</h1>
+
+<h2>Dados da moto</h2>
+
+<p>
+    <strong>Cliente:</strong> {{ moto.cliente.nome }}
+</p>
+
+<p>
+    <strong>Moto:</strong>
+    {{ moto.marca }} {{ moto.modelo }}
+</p>
+
+<p>
+    <strong>Placa:</strong> {{ moto.placa }}
+</p>
+
+<hr>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.non_field_errors }}
+
+    <div>
+        {{ form.descricao.label_tag }}
+        {{ form.descricao }}
+
+        {% if form.descricao.errors %}
+            <ul>
+                {% for error in form.descricao.errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+
+    <button type="submit">
+        Criar Ordem de Serviço
+    </button>
+</form>
+
+{% endblock %}
