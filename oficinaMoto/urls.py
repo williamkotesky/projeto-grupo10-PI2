@@ -22,13 +22,46 @@ urlpatterns = [
     path("atendimento/", views.atendimento, name="atendimento"),
 
     path(
-    "ordem/nova/<int:moto_id>/",
-    views.criar_ordem,
-    name="criar_ordem",
-),
+        "ordem/nova/<int:moto_id>/",
+        views.criar_ordem,
+        name="criar_ordem",
+    ),
+    
     path(
         "ordem/criada/<int:ordem_id>/",
         views.ordem_criada,
         name="ordem_criada",
     ),
+
+    path(
+        "moto/nova/<int:cliente_id>/",
+        views.criar_moto,
+        name="criar_moto",
+    ),
+
+    path(
+        "fipe/marcas/",
+        views.fipe_marcas,
+        name="fipe_marcas",
+    ),
+    
+    path(
+        "fipe/marcas/<str:brand_id>/modelos/",
+        views.fipe_modelos,
+        name="fipe_modelos",
+    ),
+    
+    path(
+        "fipe/marcas/<str:brand_id>/modelos/<str:model_id>/anos/",
+        views.fipe_anos,
+        name="fipe_anos",
+    ),
+    
+    path(
+        "fipe/marcas/<str:brand_id>/modelos/<str:model_id>/anos/<str:year_id>/",
+        views.fipe_preco,
+        name="fipe_preco",
+    ),
+
+
 ]

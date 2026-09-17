@@ -1,14 +1,27 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
+from unittest.mock import Mock, patch
+import requests
 
+from .forms import MotoForm
 from .models import Cliente, Moto, OrdemServico
+
 from .services.atendimento import (
     identificar_tipo_busca,
     buscar_por_celular,
     buscar_por_placa,
     buscar_motos_do_cliente,
 )
+
+from .services.fipe import (
+    buscar_marcas,
+    buscar_modelos,
+    buscar_anos,
+    buscar_preco,
+)
+
+
 
 
 class AtendimentoServiceTest(TestCase):
@@ -449,3 +462,365 @@ class CriarOrdemViewTest(TestCase):
         self.assertContains(response, "CG 160")
         self.assertContains(response, "ABC1234")
         self.assertContains(response, "João da Silva")
+
+class MotoFormTest(TestCase):
+
+    def test_placa_valida_formato_antigo(self):
+        form = MotoForm(data={
+            "placa": "ABC-1234",
+            "marca": "Honda",
+            "modelo": "CG 160",
+        })
+
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["placa"], "ABC1234")
+
+    def test_placa_valida_formato_mercosul(self):
+        form = MotoForm(data={
+            "placa": "ABC-1D23",
+            "marca": "Honda",
+            "modelo": "CG 160",
+        })
+
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["placa"], "ABC1D23")
+
+    def test_placa_converte_para_maiusculas(self):
+        form = MotoForm(data={
+            "placa": "abc-1234",
+            "marca": "Honda",
+            "modelo": "CG 160",
+        })
+
+        self.assertTrue(form.is_valid())
+        self.assertEqual(form.cleaned_data["placa"], "ABC1234")
+
+    def test_placa_invalida(self):
+        form = MotoForm(data={
+            "placa": "ABC123",
+            "marca": "Honda",
+            "modelo": "CG 160",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("placa", form.errors)
+
+    def test_placa_vazia(self):
+        form = MotoForm(data={
+            "placa": "",
+            "marca": "Honda",
+            "modelo": "CG 160",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("placa", form.errors)
+
+class FipeServiceTest(TestCase):
+
+    @patch("oficinaMoto.services.fipe.requests.get")
+    def test_buscar_marcas(self, mock_get):
+        mock_response = Mock()
+        mock_response.json.return_value = [
+            {"code": "1", "name": "Honda"},
+            {"code": "2", "name": "Yamaha"},
+        ]
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+
+        resultado = buscar_marcas()
+
+        self.assertEqual(
+            resultado,
+            [
+                {"code": "1", "name": "Honda"},
+                {"code": "2", "name": "Yamaha"},
+            ],
+        )
+
+        mock_get.assert_called_once_with(
+            "https://fipe.parallelum.com.br/api/v2/motorcycles/brands",
+            timeout=10,
+        )
+
+    @patch("oficinaMoto.services.fipe.requests.get")
+    def test_buscar_modelos(self, mock_get):
+        mock_response = Mock()
+        mock_response.json.return_value = [
+            {"code": "123", "name": "CG 160"},
+            {"code": "456", "name": "CB 500"},
+        ]
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+
+        resultado = buscar_modelos("1")
+
+        self.assertEqual(
+            resultado,
+            [
+                {"code": "123", "name": "CG 160"},
+                {"code": "456", "name": "CB 500"},
+            ],
+        )
+
+        mock_get.assert_called_once_with(
+            "https://fipe.parallelum.com.br/api/v2/motorcycles/brands/1/models",
+            timeout=10,
+        )
+
+    @patch("oficinaMoto.services.fipe.requests.get")
+    def test_buscar_anos(self, mock_get):
+        mock_response = Mock()
+        mock_response.json.return_value = [
+            {"code": "2025-1", "name": "2025"},
+            {"code": "2024-1", "name": "2024"},
+        ]
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+
+        resultado = buscar_anos("1", "123")
+
+        self.assertEqual(
+            resultado,
+            [
+                {"code": "2025-1", "name": "2025"},
+                {"code": "2024-1", "name": "2024"},
+            ],
+        )
+
+        mock_get.assert_called_once_with(
+            "https://fipe.parallelum.com.br/api/v2/motorcycles/brands/1/models/123/years",
+            timeout=10,
+        )
+
+    @patch("oficinaMoto.services.fipe.requests.get")
+    def test_buscar_preco(self, mock_get):
+        mock_response = Mock()
+        mock_response.json.return_value = {
+            "price": "R$ 18.500,00",
+            "brand": "Honda",
+            "model": "CG 160",
+            "modelYear": 2025,
+        }
+        mock_response.raise_for_status.return_value = None
+        mock_get.return_value = mock_response
+
+        resultado = buscar_preco("1", "123", "2025-1")
+
+        self.assertEqual(
+            resultado,
+            {
+                "price": "R$ 18.500,00",
+                "brand": "Honda",
+                "model": "CG 160",
+                "modelYear": 2025,
+            },
+        )
+
+        mock_get.assert_called_once_with(
+            "https://fipe.parallelum.com.br/api/v2/motorcycles/brands/1/models/123/years/2025-1",
+            timeout=10,
+        )
+
+class FipeViewTest(TestCase):
+    def setUp(self):
+            self.usuario = User.objects.create_user(
+                username="teste",
+                password="123456",
+            )
+            self.client.login(
+                username="teste",
+                password="123456",
+            )
+    
+    @patch("oficinaMoto.views.buscar_marcas")
+    def test_fipe_marcas_retorna_json(self, mock_buscar_marcas):
+        mock_buscar_marcas.return_value = [
+            {"code": "1", "name": "Honda"},
+            {"code": "2", "name": "Yamaha"},
+        ]
+
+        response = self.client.get(
+            reverse("fipe_marcas")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {"code": "1", "name": "Honda"},
+                {"code": "2", "name": "Yamaha"},
+            ],
+        )
+
+    @patch("oficinaMoto.views.buscar_modelos")
+    def test_fipe_modelos_retorna_json(self, mock_buscar_modelos):
+        mock_buscar_modelos.return_value = [
+            {"code": "123", "name": "CG 160"},
+            {"code": "456", "name": "CB 500"},
+        ]
+
+        response = self.client.get(
+            reverse(
+                "fipe_modelos",
+                kwargs={"brand_id": "1"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {"code": "123", "name": "CG 160"},
+                {"code": "456", "name": "CB 500"},
+            ],
+        )
+
+        mock_buscar_modelos.assert_called_once_with("1")
+
+    @patch("oficinaMoto.views.buscar_anos")
+    def test_fipe_anos_retorna_json(self, mock_buscar_anos):
+        mock_buscar_anos.return_value = [
+            {"code": "2025-1", "name": "2025"},
+            {"code": "2024-1", "name": "2024"},
+        ]
+
+        response = self.client.get(
+            reverse(
+                "fipe_anos",
+                kwargs={
+                    "brand_id": "1",
+                    "model_id": "123",
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            [
+                {"code": "2025-1", "name": "2025"},
+                {"code": "2024-1", "name": "2024"},
+            ],
+        )
+
+        mock_buscar_anos.assert_called_once_with("1", "123")
+
+    @patch("oficinaMoto.views.buscar_preco")
+    def test_fipe_preco_retorna_json(self, mock_buscar_preco):
+        mock_buscar_preco.return_value = {
+            "price": "R$ 18.500,00",
+            "brand": "Honda",
+            "model": "CG 160",
+            "modelYear": 2025,
+        }
+
+        response = self.client.get(
+            reverse(
+                "fipe_preco",
+                kwargs={
+                    "brand_id": "1",
+                    "model_id": "123",
+                    "year_id": "2025-1",
+                },
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "price": "R$ 18.500,00",
+                "brand": "Honda",
+                "model": "CG 160",
+                "modelYear": 2025,
+            },
+        )
+
+        mock_buscar_preco.assert_called_once_with(
+            "1",
+            "123",
+            "2025-1",
+        )
+
+    @patch("oficinaMoto.views.buscar_marcas")
+    def test_fipe_marcas_indisponivel_retorna_503(
+        self,
+        mock_buscar_marcas,
+    ):
+        mock_buscar_marcas.side_effect = requests.RequestException
+
+        response = self.client.get(
+            reverse("fipe_marcas")
+        )
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(
+            response.json(),
+            {"erro": "Não foi possível consultar a FIPE."},
+        )
+
+    def test_fipe_marcas_exige_login(self):
+        self.client.logout()
+    
+        response = self.client.get(reverse("fipe_marcas"))
+    
+        self.assertRedirects(
+            response,
+            "/login/?next=/fipe/marcas/",
+        )
+
+    @patch("oficinaMoto.views.buscar_marcas")
+    def test_fipe_marcas_retorna_erro_quando_fipe_falha(self, mock_buscar_marcas):
+        mock_buscar_marcas.side_effect = requests.RequestException
+    
+        response = self.client.get(
+            reverse("fipe_marcas")
+        )
+    
+        self.assertEqual(response.status_code, 503)
+        self.assertJSONEqual(
+            response.content,
+            {"erro": "Não foi possível consultar a FIPE."},
+        )
+
+    @patch("oficinaMoto.views.buscar_modelos")
+    def test_fipe_modelos_retorna_erro_quando_fipe_falha(self, mock_buscar_modelos):
+        mock_buscar_modelos.side_effect = requests.RequestException
+    
+        response = self.client.get(
+            reverse("fipe_modelos", args=["1"])
+        )
+    
+        self.assertEqual(response.status_code, 503)
+        self.assertJSONEqual(
+            response.content,
+            {"erro": "Não foi possível consultar os modelos na FIPE."},
+        )
+
+    @patch("oficinaMoto.views.buscar_anos")
+    def test_fipe_anos_retorna_erro_quando_fipe_falha(self, mock_buscar_anos):
+        mock_buscar_anos.side_effect = requests.RequestException
+    
+        response = self.client.get(
+            reverse("fipe_anos", args=["1", "2"])
+        )
+    
+        self.assertEqual(response.status_code, 503)
+        self.assertJSONEqual(
+            response.content,
+            {"erro": "Não foi possível consultar os anos na FIPE."},
+        )
+
+    @patch("oficinaMoto.views.buscar_preco")
+    def test_fipe_preco_retorna_erro_quando_fipe_falha(self, mock_buscar_preco):
+        mock_buscar_preco.side_effect = requests.RequestException
+    
+        response = self.client.get(
+            reverse("fipe_preco", args=["1", "2", "3"])
+        )
+    
+        self.assertEqual(response.status_code, 503)
+        self.assertJSONEqual(
+            response.content,
+            {"erro": "Não foi possível consultar o preço na FIPE."},
+        )
