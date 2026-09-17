@@ -55,14 +55,25 @@
                 <form method="post">
                     {% csrf_token %}
                 
+                    <input type="hidden" name="acao" value="nova_moto">
                     <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
                 
-                    <button type="submit" name="acao" value="nova_moto">
+                    <button type="submit">
                         Cadastrar nova moto
                     </button>
                 </form>
             {% else %}
                 <p>Este cliente ainda não possui motos cadastradas.</p>
+                <form method="post">
+                    {% csrf_token %}
+                
+                    <input type="hidden" name="acao" value="nova_moto">
+                    <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
+                
+                    <button type="submit">
+                        Cadastrar nova moto
+                    </button>
+                </form>
             {% endif %}
         
         {% else %}

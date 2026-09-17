@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+
+{% block title %}Nova Moto{% endblock %}
+
+{% block content %}
+
+<h1>Cadastrar nova moto</h1>
+
+<h2>Dados do cliente</h2>
+
+<p>
+    <strong>Cliente:</strong> {{ cliente.nome }}
+</p>
+
+<p>
+    <strong>Celular:</strong> {{ cliente.numero_celular }}
+</p>
+
+<hr>
+
+<h2>Dados da moto</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <div>
+        {{ form.placa.label_tag }}
+        {{ form.placa }}
+        {{ form.placa.errors }}
+    </div>
+
+    <div>
+        {{ form.marca.label_tag }}
+        {{ form.marca }}
+        {{ form.marca.errors }}
+    </div>
+
+    <div id="fipe-status" hidden>
+        <p></p>
+    </div>
+
+    <div id="modelo-container">
+        {{ form.modelo.label_tag }}
+        {{ form.modelo }}
+        {{ form.modelo.errors }}
+    </div>
+
+    <input type="hidden" id="modelo-fipe-hidden" name="modelo">
+
+    <div id="fipe-modelo-container" hidden>
+        <label for="fipe-modelo">Modelo FIPE</label>
+        <select id="fipe-modelo" disabled>
+            <option value="">Selecione o modelo</option>
+        </select>
+    </div>
+
+    <div id="fipe-ano-container" hidden>
+        <label for="fipe-ano">Ano</label>
+        <select id="fipe-ano" disabled>
+            <option value="">Selecione o ano</option>
+        </select>
+    </div>
+
+    <div id="fipe-preco-container" hidden>
+        <p>
+            <strong>Preço FIPE de referência:</strong>
+            <span id="fipe-preco"></span>
+        </p>
+    </div>
+
+    <button type="submit">
+        Cadastrar Moto
+    </button>
+</form>
+
+<script>
+    const marcaInput = document.getElementById("id_marca");
+    const modeloContainer = document.getElementById("modelo-container");
+    const modeloInput = document.getElementById("id_modelo");
+    const modeloFipeHidden = document.getElementById("modelo-fipe-hidden");
+
+    const statusContainer = document.getElementById("fipe-status");
+    const statusMessage = statusContainer.querySelector("p");
+
+    const fipeModeloContainer = document.getElementById("fipe-modelo-container");
+    const fipeModelo = document.getElementById("fipe-modelo");
+
+    const fipeAnoContainer = document.getElementById("fipe-ano-container");
+    const fipeAno = document.getElementById("fipe-ano");
+
+    const fipePrecoContainer = document.getElementById("fipe-preco-container");
+    const fipePreco = document.getElementById("fipe-preco");
+    let marcaAtual = null;
+
+
+
+    function mostrarStatus(mensagem) {
+        statusMessage.textContent = mensagem;
+        statusContainer.hidden = false;
+    }
+
+
+    function esconderStatus() {
+        statusContainer.hidden = true;
+        statusMessage.textContent = "";
+    }
+
+
+    function limparFipe() {
+        fipeModelo.innerHTML = '<option value="">Selecione o modelo</option>';
+        fipeAno.innerHTML = '<option value="">Selecione o ano</option>';
+
+        fipeModeloContainer.hidden = true;
+        fipeAnoContainer.hidden = true;
+        fipePrecoContainer.hidden = true;
+
+        fipeModelo.disabled = true;
+        fipeAno.disabled = true;
+
+        fipePreco.textContent = "";
+
+        modeloContainer.hidden = false;
+        modeloInput.disabled = false;
+        modeloInput.name = "modelo";
+        modeloFipeHidden.removeAttribute("name");
+        modeloFipeHidden.value = "";
+        
+    }
+
+
+    function encontrarMarca(marcas, nomeDigitado) {
+        const nomeNormalizado = nomeDigitado.trim().toLowerCase();
+
+        return marcas.find(
+            marca => marca.name.trim().toLowerCase() === nomeNormalizado
+        );
+    }
+
+
+    marcaInput.addEventListener("change", async function () {
+        const marcaDigitada = marcaInput.value.trim();
+
+        limparFipe();
+        esconderStatus();
+
+        if (!marcaDigitada) {
+            return;
+        }
+
+        mostrarStatus("Consultando marcas na FIPE...");
+
+        marcaInput.disabled = true;
+        modeloInput.disabled = false;
+
+        try {
+            const respostaMarcas = await fetch("{% url 'fipe_marcas' %}");
+
+            if (!respostaMarcas.ok) {
+                throw new Error("Erro ao consultar marcas.");
+            }
+
+            const marcas = await respostaMarcas.json();
+            const marcaEncontrada = encontrarMarca(marcas, marcaDigitada);
+
+            if (!marcaEncontrada) {
+                mostrarStatus(
+                    "Marca não encontrada na FIPE. Você pode preencher o modelo manualmente."
+                );
+                return;
+            }
+
+            marcaAtual = marcaEncontrada;
+
+            mostrarStatus("Marca encontrada. Carregando modelos...");
+
+            const respostaModelos = await fetch(
+                `/fipe/marcas/${marcaEncontrada.code}/modelos/`
+            );
+
+            if (!respostaModelos.ok) {
+                throw new Error("Erro ao consultar modelos.");
+            }
+
+            const modelos = await respostaModelos.json();
+
+            if (!modelos.length) {
+                mostrarStatus(
+                    "Nenhum modelo encontrado na FIPE. Você pode preencher o modelo manualmente."
+                );
+                return;
+            }
+
+            fipeModelo.innerHTML = '<option value="">Selecione o modelo</option>';
+
+            modelos.forEach(modelo => {
+                const option = document.createElement("option");
+
+                option.value = modelo.code;
+                option.textContent = modelo.name;
+
+                fipeModelo.appendChild(option);
+            });
+
+            modeloContainer.hidden = true;
+            modeloInput.disabled = false;
+            
+            modeloInput.removeAttribute("name");
+            modeloFipeHidden.setAttribute("name", "modelo");
+            
+            fipeModeloContainer.hidden = false;
+            fipeModelo.disabled = false;
+            
+            mostrarStatus("Modelo carregado. Selecione o modelo da moto.");
+
+        } catch (erro) {
+            console.error(erro);
+
+            mostrarStatus(
+                "Não foi possível consultar a FIPE. Você pode preencher o modelo manualmente."
+            );
+
+            modeloContainer.hidden = false;
+            modeloInput.disabled = false;
+            modeloInput.name = "modelo";
+            modeloFipeHidden.removeAttribute("name");
+            modeloFipeHidden.value = "";
+
+        } finally {
+            marcaInput.disabled = false;
+        }
+    });
+
+
+    fipeModelo.addEventListener("change", async function () {
+        const modelId = fipeModelo.value;
+        const modeloSelecionado = fipeModelo.options[fipeModelo.selectedIndex].text;
+
+        fipeAnoContainer.hidden = true;
+        fipePrecoContainer.hidden = true;
+
+        fipeAno.innerHTML = '<option value="">Selecione o ano</option>';
+        fipeAno.disabled = true;
+
+        fipePreco.textContent = "";
+
+        if (!modelId) {
+            return;
+        }
+
+        modeloInput.value = modeloSelecionado;
+        modeloFipeHidden.value = modeloSelecionado;
+        modeloInput.removeAttribute("name");
+
+        mostrarStatus("Carregando anos disponíveis...");
+
+        fipeModelo.disabled = true;
+
+        try {
+            const respostaAnos = await fetch(
+                `/fipe/marcas/${marcaAtual.code}/modelos/${modelId}/anos/`
+            );
+
+            if (!respostaAnos.ok) {
+                throw new Error("Erro ao consultar anos.");
+            }
+
+            const anos = await respostaAnos.json();
+
+            if (!anos.length) {
+                mostrarStatus(
+                    "Nenhum ano encontrado na FIPE."
+                );
+                return;
+            }
+
+            anos.forEach(ano => {
+                const option = document.createElement("option");
+
+                option.value = ano.code;
+                option.textContent = ano.name;
+
+                fipeAno.appendChild(option);
+            });
+
+            fipeAnoContainer.hidden = false;
+            fipeAno.disabled = false;
+
+            mostrarStatus("Ano carregado. Selecione o ano da moto.");
+
+        } catch (erro) {
+            console.error(erro);
+
+            mostrarStatus(
+                "Não foi possível consultar os anos na FIPE."
+            );
+
+        } finally {
+            fipeModelo.disabled = false;
+        }
+    });
+
+
+    fipeAno.addEventListener("change", async function () {
+        const yearId = fipeAno.value;
+        const modelId = fipeModelo.value;
+
+        fipePrecoContainer.hidden = true;
+        fipePreco.textContent = "";
+
+        if (!yearId) {
+            return;
+        }
+
+        mostrarStatus("Consultando preço FIPE...");
+
+        fipeAno.disabled = true;
+
+        try {
+            const respostaPreco = await fetch(
+                `/fipe/marcas/${marcaAtual.code}/modelos/${modelId}/anos/${yearId}/`
+            );
+
+            if (!respostaPreco.ok) {
+                throw new Error("Erro ao consultar preço.");
+            }
+
+            const resultado = await respostaPreco.json();
+
+            fipePreco.textContent = resultado.price;
+
+            fipePrecoContainer.hidden = false;
+
+            mostrarStatus("Preço FIPE carregado.");
+
+        } catch (erro) {
+            console.error(erro);
+
+            mostrarStatus(
+                "Não foi possível consultar o preço FIPE."
+            );
+
+        } finally {
+            fipeAno.disabled = false;
+        }
+    });
+
+    const form = document.querySelector("form");
+   
+</script>
+
+{% endblock %}
