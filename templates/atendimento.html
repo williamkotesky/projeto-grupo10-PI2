@@ -78,6 +78,16 @@
         
         {% else %}
             <p>Nenhum cliente encontrado.</p>
+        
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="novo_cliente">
+                <input type="hidden" name="celular" value="{{ celular_buscado }}">
+        
+                <button type="submit">
+                    Cadastrar novo cliente
+                </button>
+            </form>
         {% endif %}
 
     {% elif tipo_busca == "placa" %}
@@ -88,7 +98,45 @@
             <p>Moto encontrada: {{ moto.marca }} {{ moto.modelo }}</p>
             <p>Cliente: {{ moto.cliente.nome }}</p>
         {% else %}
-            <p>Nenhuma moto encontrada.</p>
+            <p>Nenhuma moto encontrada para esta placa.</p>
+        
+            <h3>Cliente</h3>
+        
+            <p>
+                Informe o celular do cliente para continuar o cadastro:
+            </p>
+        
+            <form method="post">
+                {% csrf_token %}
+        
+                <input
+                    type="hidden"
+                    name="acao"
+                    value="buscar_cliente_para_nova_moto"
+                >
+        
+                <input
+                    type="hidden"
+                    name="placa"
+                    value="{{ valor_busca }}"
+                >
+        
+                <label for="celular_cliente">
+                    Celular:
+                </label>
+        
+                <input
+                    type="text"
+                    id="celular_cliente"
+                    name="celular"
+                    required
+                    maxlength="20"
+                >
+        
+                <button type="submit">
+                    Continuar
+                </button>
+            </form>
         {% endif %}
 
     {% endif %}

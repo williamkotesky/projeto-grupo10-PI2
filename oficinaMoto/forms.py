@@ -90,3 +90,42 @@ class MotoForm(forms.Form):
             }
         ),
     )
+
+
+class ClienteForm(forms.Form):
+    nome = forms.CharField(
+        label="Nome",
+        min_length=2,
+        max_length=100,
+        required=True,
+        error_messages={
+            "required": "Este campo é obrigatório.",
+            "min_length": "O nome deve possuir pelo menos 2 caracteres.",
+            "max_length": "O nome deve possuir no máximo 100 caracteres.",
+        },
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Nome do cliente",
+                "required": True,
+                "minlength": 2,
+                "maxlength": 100,
+            }
+        ),
+    )
+
+    numero_celular = forms.CharField(
+        label="Celular",
+        max_length=20,
+        required=True,
+        error_messages={
+            "required": "Este campo é obrigatório.",
+            "max_length": "O celular deve possuir no máximo 20 caracteres.",
+        },
+        widget=forms.TextInput(
+            attrs={
+                "placeholder": "Celular do cliente",
+                "required": True,
+                "maxlength": 20,
+            }
+        ),
+    )
