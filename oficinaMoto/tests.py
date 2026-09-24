@@ -4,7 +4,7 @@ from django.urls import reverse
 from unittest.mock import Mock, patch
 import requests
 
-from .forms import MotoForm
+from .forms import ClienteForm, MotoForm, OrdemServicoForm
 from .models import Cliente, Moto, OrdemServico
 
 from .services.atendimento import (
@@ -158,7 +158,13 @@ class AtendimentoViewTest(TestCase):
             cliente=self.cliente,
         )
 
+        self.client.login(
+            username="funcionario",
+            password="senha-teste",
+        )
+
     def test_usuario_nao_autenticado_e_redirecionado_para_login(self):
+        self.client.logout()
         response = self.client.get(
             reverse("atendimento")
         )
@@ -246,6 +252,112 @@ class AtendimentoViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(response.context["moto"])
 
+    def test_celular_inexistente_exibe_opcao_de_cadastrar_cliente(self):
+        self.client.login(
+            username="funcionario",
+            password="senha-teste",
+        )
+    
+        response = self.client.post(
+            reverse("atendimento"),
+            {
+                "busca": "11988887777",
+            }
+        )
+    
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Cadastrar novo cliente"
+        )
+
+    def test_opcao_novo_cliente_redireciona_para_cadastro(self):
+        self.client.login(
+            username="funcionario",
+            password="senha-teste",
+        )
+    
+        response = self.client.post(
+            reverse("atendimento"),
+            {
+                "acao": "novo_cliente",
+                "celular": "11988887777",
+            }
+        )
+    
+        self.assertRedirects(
+            response,
+            reverse("criar_cliente")
+        )
+
+    def test_busca_por_placa_inexistente_exibe_formulario_de_cliente(self):
+        response = self.client.post(
+            reverse("atendimento"),
+            {
+                "busca": "ZZZ9Z99",
+            }
+        )
+    
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Nenhuma moto encontrada para esta placa."
+        )
+        self.assertContains(
+            response,
+            "Informe o celular do cliente"
+        )
+
+    def test_placa_inexistente_cliente_existente_redireciona_para_nova_moto(self):
+        cliente = Cliente.objects.create(
+            nome="Maria da Silva",
+            numero_celular="11988887777",
+        )
+    
+        response = self.client.post(
+            reverse("atendimento"),
+            {
+                "acao": "buscar_cliente_para_nova_moto",
+                "celular": "11988887777",
+            }
+        )
+    
+        self.assertRedirects(
+            response,
+            reverse(
+                "criar_moto",
+                kwargs={"cliente_id": cliente.id_cliente},
+            )
+        )
+
+    def test_placa_inexistente_cliente_nao_cadastrado_redireciona_para_novo_cliente(self):
+        response = self.client.post(
+            reverse("atendimento"),
+            {
+                "acao": "buscar_cliente_para_nova_moto",
+                "celular": "11977776666",
+            }
+        )
+    
+        self.assertRedirects(
+            response,
+            "/clientes/novo/?celular=11977776666",
+        )
+
+    def test_novo_cliente_preenche_celular_recebido_por_parametro(self):
+        response = self.client.get(
+            reverse("criar_cliente"),
+            {
+                "celular": "11977776666",
+            }
+        )
+    
+        self.assertEqual(response.status_code, 200)
+    
+        self.assertContains(
+            response,
+            'value="11977776666"'
+        )
 
 class CriarOrdemViewTest(TestCase):
 
@@ -823,4 +935,156 @@ class FipeViewTest(TestCase):
         self.assertJSONEqual(
             response.content,
             {"erro": "Não foi possível consultar o preço na FIPE."},
+        )
+
+class ClienteFormTest(TestCase):
+
+    def test_cliente_form_valido(self):
+        form = ClienteForm(data={
+            "nome": "João da Silva",
+            "numero_celular": "12999999999",
+        })
+
+        self.assertTrue(form.is_valid())
+
+    def test_nome_obrigatorio(self):
+        form = ClienteForm(data={
+            "nome": "",
+            "numero_celular": "12999999999",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("nome", form.errors)
+
+    def test_nome_muito_curto(self):
+        form = ClienteForm(data={
+            "nome": "A",
+            "numero_celular": "12999999999",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("nome", form.errors)
+
+    def test_nome_muito_longo(self):
+        form = ClienteForm(data={
+            "nome": "A" * 101,
+            "numero_celular": "12999999999",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("nome", form.errors)
+
+    def test_celular_obrigatorio(self):
+        form = ClienteForm(data={
+            "nome": "João da Silva",
+            "numero_celular": "",
+        })
+
+        self.assertFalse(form.is_valid())
+        self.assertIn("numero_celular", form.errors)
+
+class CriarClienteViewTest(TestCase):
+
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="funcionario",
+            password="senha-teste",
+        )
+
+        self.client.login(
+            username="funcionario",
+            password="senha-teste",
+        )
+
+    def test_usuario_nao_autenticado_e_redirecionado(self):
+        self.client.logout()
+
+        response = self.client.get(
+            reverse("criar_cliente")
+        )
+
+        self.assertRedirects(
+            response,
+            "/login/?next=/clientes/novo/"
+        )
+
+    def test_tela_de_cadastro_exibe_formulario(self):
+        response = self.client.get(
+            reverse("criar_cliente")
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Cadastrar cliente")
+        self.assertContains(response, "Nome")
+        self.assertContains(response, "Celular")
+
+    def test_cadastrar_cliente_com_dados_validos(self):
+        response = self.client.post(
+            reverse("criar_cliente"),
+            {
+                "nome": "João da Silva",
+                "numero_celular": "12999999999",
+            }
+        )
+
+        cliente = Cliente.objects.get()
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "criar_moto",
+                kwargs={"cliente_id": cliente.id_cliente},
+            )
+        )
+
+        self.assertEqual(
+            cliente.nome,
+            "João da Silva"
+        )
+
+        self.assertEqual(
+            cliente.numero_celular,
+            "12999999999"
+        )
+
+    def test_cadastrar_cliente_com_nome_vazio(self):
+        response = self.client.post(
+            reverse("criar_cliente"),
+            {
+                "nome": "",
+                "numero_celular": "12999999999",
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            Cliente.objects.count(),
+            0
+        )
+
+        self.assertContains(
+            response,
+            "Este campo é obrigatório."
+        )
+
+    def test_cadastrar_cliente_com_celular_vazio(self):
+        response = self.client.post(
+            reverse("criar_cliente"),
+            {
+                "nome": "João da Silva",
+                "numero_celular": "",
+            }
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            Cliente.objects.count(),
+            0
+        )
+
+        self.assertContains(
+            response,
+            "Este campo é obrigatório."
         )

@@ -3,75 +3,147 @@
 {% block title %}Nova Moto{% endblock %}
 
 {% block content %}
+<style>
+    .pagina-formulario {
+        max-width: 700px;
+        margin: 30px auto;
+    }
 
-<h1>Cadastrar nova moto</h1>
+    .pagina-formulario h1 {
+        margin-bottom: 25px;
+    }
 
-<h2>Dados do cliente</h2>
+    .secao {
+        margin-bottom: 25px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
 
-<p>
-    <strong>Cliente:</strong> {{ cliente.nome }}
-</p>
+    .secao h2 {
+        margin-top: 0;
+        margin-bottom: 18px;
+    }
 
-<p>
-    <strong>Celular:</strong> {{ cliente.numero_celular }}
-</p>
+    .dados-cliente p {
+        margin: 6px 0;
+    }
 
-<hr>
+    .campo {
+        margin-bottom: 18px;
+    }
 
-<h2>Dados da moto</h2>
+    .campo label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: bold;
+    }
 
-<form method="post">
-    {% csrf_token %}
+    .campo input,
+    .campo select,
+    .campo textarea {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 9px;
+    }
 
-    <div>
-        {{ form.placa.label_tag }}
-        {{ form.placa }}
-        {{ form.placa.errors }}
-    </div>
+    .erros {
+        margin-top: 5px;
+    }
 
-    <div>
-        {{ form.marca.label_tag }}
-        {{ form.marca }}
-        {{ form.marca.errors }}
-    </div>
+    .status-fipe {
+        margin: 15px 0;
+        padding: 10px;
+        border-radius: 6px;
+        background: #f2f2f2;
+    }
 
-    <div id="fipe-status" hidden>
-        <p></p>
-    </div>
+    .preco-fipe {
+        margin-top: 15px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+    }
 
-    <div id="modelo-container">
-        {{ form.modelo.label_tag }}
-        {{ form.modelo }}
-        {{ form.modelo.errors }}
-    </div>
+    .botao {
+        padding: 10px 18px;
+        cursor: pointer;
+    }
+</style>
+<div class="pagina-formulario">
 
-    <input type="hidden" id="modelo-fipe-hidden" name="modelo">
+    <h1>Cadastrar nova moto</h1>
 
-    <div id="fipe-modelo-container" hidden>
-        <label for="fipe-modelo">Modelo FIPE</label>
-        <select id="fipe-modelo" disabled>
-            <option value="">Selecione o modelo</option>
-        </select>
-    </div>
+    <div class="secao dados-cliente">
+        <h2>Dados do cliente</h2>
 
-    <div id="fipe-ano-container" hidden>
-        <label for="fipe-ano">Ano</label>
-        <select id="fipe-ano" disabled>
-            <option value="">Selecione o ano</option>
-        </select>
-    </div>
-
-    <div id="fipe-preco-container" hidden>
         <p>
-            <strong>Preço FIPE de referência:</strong>
-            <span id="fipe-preco"></span>
+            <strong>Cliente:</strong> {{ cliente.nome }}
+        </p>
+
+        <p>
+            <strong>Celular:</strong> {{ cliente.numero_celular }}
         </p>
     </div>
 
-    <button type="submit">
-        Cadastrar Moto
-    </button>
-</form>
+    <div class="secao">
+        <h2>Dados da moto</h2>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="campo">
+                {{ form.placa.label_tag }}
+                {{ form.placa }}
+                {{ form.placa.errors }}
+            </div>
+
+            <div class="campo">
+                {{ form.marca.label_tag }}
+                {{ form.marca }}
+                {{ form.marca.errors }}
+            </div>
+
+            <div id="fipe-status" class="status-fipe" hidden>
+                <p></p>
+            </div>
+
+            <div id="modelo-container" class="campo">
+                {{ form.modelo.label_tag }}
+                {{ form.modelo }}
+                {{ form.modelo.errors }}
+            </div>
+
+            <input type="hidden" id="modelo-fipe-hidden" name="modelo">
+
+            <div id="fipe-modelo-container" class="campo" hidden>
+                <label for="fipe-modelo">Modelo FIPE</label>
+                <select id="fipe-modelo" disabled>
+                    <option value="">Selecione o modelo</option>
+                </select>
+            </div>
+
+            <div id="fipe-ano-container" class="campo" hidden>
+                <label for="fipe-ano">Ano</label>
+                <select id="fipe-ano" disabled>
+                    <option value="">Selecione o ano</option>
+                </select>
+            </div>
+
+            <div id="fipe-preco-container" class="preco-fipe" hidden>
+                <p>
+                    <strong>Preço FIPE de referência:</strong>
+                    <span id="fipe-preco"></span>
+                </p>
+            </div>
+
+            <button class="botao" type="submit">
+                Cadastrar Moto
+            </button>
+        </form>
+    </div>
+
+</div>
 
 <script>
     const marcaInput = document.getElementById("id_marca");

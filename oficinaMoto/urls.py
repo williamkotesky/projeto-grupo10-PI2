@@ -63,5 +63,11 @@ urlpatterns = [
         name="fipe_preco",
     ),
 
+    path(
+        "clientes/novo/",
+        views.criar_cliente,
+        name="criar_cliente",
+    ),
+
 
 ]

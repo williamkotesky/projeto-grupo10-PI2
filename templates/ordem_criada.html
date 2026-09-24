@@ -4,45 +4,107 @@
 
 {% block content %}
 
-<h1>Ordem de Serviço criada</h1>
+<style>
+    .pagina-sucesso {
+        max-width: 700px;
+        margin: 40px auto;
+    }
 
-<p>
-    A ordem de serviço foi criada com sucesso.
-</p>
+    .cabecalho-sucesso {
+        margin-bottom: 25px;
+    }
 
-<p>
-    <strong>Número da OS:</strong>
-    {{ ordem.id_ordem }}
-</p>
+    .cabecalho-sucesso h1 {
+        margin-bottom: 10px;
+    }
 
-<p>
-    <strong>Código de acesso:</strong>
-    {{ ordem.codigo_acesso }}
-</p>
+    .mensagem-sucesso {
+        padding: 15px;
+        margin-bottom: 25px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
 
-<p>
-    <strong>Status:</strong>
-    {{ ordem.get_status_ordem_display }}
-</p>
+    .dados-os {
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
 
-<p>
-    <strong>Descrição:</strong>
-    {{ ordem.descricao }}
-</p>
+    .dados-os p {
+        margin: 10px 0;
+    }
 
-<p>
-    <strong>Moto:</strong>
-    {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
-    - {{ ordem.moto.placa }}
-</p>
+    .codigo-acesso {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        text-align: center;
+    }
 
-<p>
-    <strong>Cliente:</strong>
-    {{ ordem.cliente.nome }}
-</p>
+    .codigo-acesso strong {
+        display: block;
+        font-size: 1.4em;
+        margin-top: 8px;
+        letter-spacing: 2px;
+    }
 
-<a href="{% url 'atendimento' %}">
-    Voltar para atendimento
-</a>
+    .voltar {
+        display: inline-block;
+        margin-top: 25px;
+    }
+</style>
+
+<div class="pagina-sucesso">
+
+    <div class="cabecalho-sucesso">
+        <h1>Ordem de Serviço criada</h1>
+
+        <p>
+            A ordem de serviço foi criada com sucesso.
+        </p>
+    </div>
+
+    <div class="dados-os">
+
+        <p>
+            <strong>Número da OS:</strong>
+            {{ ordem.id_ordem }}
+        </p>
+
+        <div class="codigo-acesso">
+            <span><strong>Código de acesso</strong></span>
+            <strong>{{ ordem.codigo_acesso }}</strong>
+        </div>
+
+        <p>
+            <strong>Status:</strong>
+            {{ ordem.get_status_ordem_display }}
+        </p>
+
+        <p>
+            <strong>Descrição:</strong>
+            {{ ordem.descricao }}
+        </p>
+
+        <p>
+            <strong>Moto:</strong>
+            {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
+            - {{ ordem.moto.placa }}
+        </p>
+
+        <p>
+            <strong>Cliente:</strong>
+            {{ ordem.cliente.nome }}
+        </p>
+
+    </div>
+
+    <a class="voltar" href="{% url 'atendimento' %}">
+        Voltar para atendimento
+    </a>
+
+</div>
 
 {% endblock %}

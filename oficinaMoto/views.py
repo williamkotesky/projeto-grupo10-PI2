@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import requests
 
-from .forms import OrdemServicoForm, MotoForm
+from .forms import OrdemServicoForm, MotoForm, ClienteForm
 from .models import Moto, OrdemServico, Cliente
 
 from .services.atendimento import (
@@ -83,7 +84,28 @@ def atendimento(request):
 
         acao = request.POST.get("acao")
 
-        if acao == "selecionar_moto":
+        if acao == "buscar_cliente_para_nova_moto":
+            celular = request.POST.get("celular", "").strip()
+        
+            tipo, valor = identificar_tipo_busca(celular)
+        
+            if tipo == "celular":
+                cliente = buscar_por_celular(valor)
+        
+                if cliente:
+                    return redirect(
+                        "criar_moto",
+                        cliente_id=cliente.id_cliente,
+                    )
+        
+                return redirect(
+                    f"{reverse('criar_cliente')}?celular={valor}"
+                )
+
+        if acao == "novo_cliente":
+            return redirect("criar_cliente")
+
+        elif acao == "selecionar_moto":
             
             moto_id = request.POST.get("moto_id")
 
@@ -108,6 +130,7 @@ def atendimento(request):
             if tipo == "celular":
                 cliente = buscar_por_celular(valor)
                 contexto["cliente"] = cliente
+                contexto["celular_buscado"] = valor
 
                 if cliente:
                     contexto["motos"] = buscar_motos_do_cliente(cliente)
@@ -195,4 +218,36 @@ def criar_moto(request, cliente_id):
             "form": form,
             "cliente": cliente,
         },
+    )
+
+
+@login_required
+def criar_cliente(request):
+    if request.method == "POST":
+        form = ClienteForm(request.POST)
+
+        if form.is_valid():
+            cliente = Cliente.objects.create(
+                nome=form.cleaned_data["nome"],
+                numero_celular=form.cleaned_data["numero_celular"],
+            )
+
+            return redirect(
+                "criar_moto",
+                cliente_id=cliente.id_cliente,
+            )
+
+    else:
+        celular = request.GET.get("celular", "")
+
+        form = ClienteForm(
+            initial={
+                "numero_celular": celular,
+            }
+        )
+
+    return render(
+        request,
+        "criar_cliente.html",
+        {"form": form},
     )
