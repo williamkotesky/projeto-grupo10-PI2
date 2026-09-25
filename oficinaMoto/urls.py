@@ -1,6 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path
 from . import views
+from . import views_edicao
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -67,6 +68,18 @@ urlpatterns = [
         "clientes/novo/",
         views.criar_cliente,
         name="criar_cliente",
+    ),
+
+    path(
+        "cliente/<int:cliente_id>/editar/",
+        views_edicao.editar_cliente,
+        name="editar_cliente",
+    ),
+    
+    path(
+        "moto/<int:moto_id>/editar/",
+        views_edicao.editar_moto,
+        name="editar_moto",
     ),
 
 
