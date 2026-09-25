@@ -1088,3 +1088,129 @@ class CriarClienteViewTest(TestCase):
             response,
             "Este campo é obrigatório."
         )
+
+class EdicaoClienteMotoViewTest(TestCase):
+
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="funcionario",
+            password="senha-teste",
+        )
+
+        self.cliente = Cliente.objects.create(
+            nome="João da Silva",
+            numero_celular="12999999999",
+        )
+
+        self.moto = Moto.objects.create(
+            placa="ABC1D23",
+            marca="Honda",
+            modelo="CG 160",
+            cliente=self.cliente,
+        )
+
+        self.client.login(
+            username="funcionario",
+            password="senha-teste",
+        )
+
+    def test_editar_cliente_carrega_dados(self):
+        response = self.client.get(
+            reverse(
+                "editar_cliente",
+                kwargs={"cliente_id": self.cliente.id_cliente},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["form"].initial["nome"],
+            "João da Silva",
+        )
+        self.assertEqual(
+            response.context["form"].initial["numero_celular"],
+            "12999999999",
+        )
+
+    def test_editar_cliente_atualiza_dados(self):
+        response = self.client.post(
+            reverse(
+                "editar_cliente",
+                kwargs={"cliente_id": self.cliente.id_cliente},
+            ),
+            {
+                "nome": "João Atualizado",
+                "numero_celular": "11988887777",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("atendimento"),
+        )
+
+        self.cliente.refresh_from_db()
+
+        self.assertEqual(
+            self.cliente.nome,
+            "João Atualizado",
+        )
+        self.assertEqual(
+            self.cliente.numero_celular,
+            "11988887777",
+        )
+
+    def test_editar_moto_carrega_dados(self):
+        response = self.client.get(
+            reverse(
+                "editar_moto",
+                kwargs={"moto_id": self.moto.id_moto},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["form"].initial["placa"],
+            "ABC1D23",
+        )
+        self.assertEqual(
+            response.context["form"].initial["marca"],
+            "Honda",
+        )
+        self.assertEqual(
+            response.context["form"].initial["modelo"],
+            "CG 160",
+        )
+
+    def test_editar_moto_atualiza_dados(self):
+        response = self.client.post(
+            reverse(
+                "editar_moto",
+                kwargs={"moto_id": self.moto.id_moto},
+            ),
+            {
+                "placa": "DEF4G56",
+                "marca": "Yamaha",
+                "modelo": "Fazer 250",
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse("atendimento"),
+        )
+
+        self.moto.refresh_from_db()
+
+        self.assertEqual(
+            self.moto.placa,
+            "DEF4G56",
+        )
+        self.assertEqual(
+            self.moto.marca,
+            "Yamaha",
+        )
+        self.assertEqual(
+            self.moto.modelo,
+            "Fazer 250",
+        )

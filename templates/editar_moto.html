@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Editar moto{% endblock %}
+
+{% block content %}
+
+<h1>Editar moto</h1>
+
+<p>
+    Atualize os dados cadastrais da moto.
+</p>
+
+<form method="post">
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Salvar alterações
+    </button>
+</form>
+
+<a href="{% url 'atendimento' %}">
+    Voltar para atendimento
+</a>
+
+{% endblock %}

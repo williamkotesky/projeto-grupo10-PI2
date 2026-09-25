@@ -31,6 +31,10 @@
             <p>Nome: {{ cliente.nome }}</p>
             <p>Celular: {{ cliente.numero_celular }}</p>
         
+            <a href="{% url 'editar_cliente' cliente.id_cliente %}">
+                Editar cliente
+            </a>
+
             <h3>Motos cadastradas</h3>
         
             {% if motos %}
@@ -46,8 +50,12 @@
                                 {{ moto.marca }} {{ moto.modelo }} - {{ moto.placa }}
                     
                                 <button type="submit" name="acao" value="selecionar_moto">
-                                    Selecionar
+                                    Abrir ordem de serviço
                                 </button>
+                                
+                                <a href="{% url 'editar_moto' moto.id_moto %}">
+                                    Editar moto
+                                </a>
                             </p>
                         </form>
                     {% endfor %}
@@ -95,8 +103,45 @@
         <h2>Busca por placa</h2>
 
         {% if moto %}
-            <p>Moto encontrada: {{ moto.marca }} {{ moto.modelo }}</p>
-            <p>Cliente: {{ moto.cliente.nome }}</p>
+            <h2>Cliente</h2>
+            
+            <p>Nome: {{ moto.cliente.nome }}</p>
+            <p>Celular: {{ moto.cliente.numero_celular }}</p>
+            
+            <a href="{% url 'editar_cliente' moto.cliente.id_cliente %}">
+                Editar cliente
+            </a>
+            
+            <h2>Moto encontrada</h2>
+            
+            <p>Modelo: {{ moto.modelo }}</p>
+            <p>Marca: {{ moto.marca }}</p>
+            <p>Placa: {{ moto.placa }}</p>
+            
+            <form method="post">
+                {% csrf_token %}
+            
+                <input
+                    type="hidden"
+                    name="moto_id"
+                    value="{{ moto.id_moto }}"
+                >
+            
+                <button
+                    type="submit"
+                    name="acao"
+                    value="selecionar_moto"
+                >
+                    Abrir ordem de serviço
+                </button>
+            </form>
+            
+            <a href="{% url 'editar_moto' moto.id_moto %}">
+                Editar moto
+            </a>
+        
+        
+        
         {% else %}
             <p>Nenhuma moto encontrada para esta placa.</p>
         
