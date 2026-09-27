@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Buscar Ordens de Serviço{% endblock %}
+
+{% block content %}
+
+<h1>Buscar ordens de serviço</h1>
+
+<form method="get">
+
+    <div>
+        <label for="data_abertura">
+            Data de abertura:
+        </label>
+
+        <input
+            type="date"
+            id="data_abertura"
+            name="data_abertura"
+            value="{{ data_abertura }}"
+        >
+    </div>
+
+    <div>
+        <label for="status">
+            Status:
+        </label>
+
+        <select id="status" name="status">
+
+            <option value="">
+                Todos
+            </option>
+
+            {% for valor, descricao in status_choices %}
+
+                <option
+                    value="{{ valor }}"
+                    {% if status == valor %}selected{% endif %}
+                >
+                    {{ descricao }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+    </div>
+
+    <div>
+        <label for="quantidade">
+            Número de resultados:
+        </label>
+
+        <select id="quantidade" name="quantidade">
+
+            <option value="10" {% if quantidade == 10 %}selected{% endif %}>
+                10
+            </option>
+
+            <option value="20" {% if quantidade == 20 %}selected{% endif %}>
+                20
+            </option>
+
+            <option value="50" {% if quantidade == 50 %}selected{% endif %}>
+                50
+            </option>
+
+            <option value="100" {% if quantidade == 100 %}selected{% endif %}>
+                100
+            </option>
+
+        </select>
+    </div>
+
+    <div>
+        <label for="ordem">
+            Ordenação:
+        </label>
+
+        <select id="ordem" name="ordem">
+
+            <option
+                value="desc"
+                {% if ordem == "desc" %}selected{% endif %}
+            >
+                Mais recentes primeiro
+            </option>
+
+            <option
+                value="asc"
+                {% if ordem == "asc" %}selected{% endif %}
+            >
+                Mais antigas primeiro
+            </option>
+
+        </select>
+    </div>
+
+    <button type="submit">
+        Buscar
+    </button>
+
+</form>
+
+{% if ordens is not None %}
+
+    <hr>
+
+    <h2>Resultados</h2>
+
+    {% if ordens %}
+
+        {% for ordem in ordens %}
+
+            <hr>
+
+            <h3>OS #{{ ordem.id_ordem }}</h3>
+
+            <h3>Cliente</h3>
+
+            <p>
+                <strong>Nome:</strong>
+                {{ ordem.cliente.nome }}
+            </p>
+
+            <p>
+                <strong>Celular:</strong>
+                {{ ordem.cliente.numero_celular }}
+            </p>
+
+            <a href="{% url 'editar_cliente' ordem.cliente.id_cliente %}">
+                Editar cliente
+            </a>
+
+            <h3>Moto</h3>
+
+            <p>
+                <strong>Marca:</strong>
+                {{ ordem.moto.marca }}
+            </p>
+
+            <p>
+                <strong>Modelo:</strong>
+                {{ ordem.moto.modelo }}
+            </p>
+
+            <p>
+                <strong>Placa:</strong>
+                {{ ordem.moto.placa }}
+            </p>
+
+            <a href="{% url 'editar_moto' ordem.moto.id_moto %}">
+                Editar moto
+            </a>
+
+            <h3>Ordem de Serviço</h3>
+
+            <p>
+                <strong>Descrição:</strong>
+                {{ ordem.descricao }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                {{ ordem.get_status_ordem_display }}
+            </p>
+
+            <p>
+                <strong>Data de abertura:</strong>
+                {{ ordem.data_abertura|date:"d/m/Y H:i" }}
+            </p>
+
+            <p>
+                <strong>Data de encerramento:</strong>
+                {% if ordem.data_fechamento %}
+                    {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
+                {% else %}
+                    Não encerrada
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Custo das peças:</strong>
+                {% if ordem.custo_pecas %}
+                    R$ {{ ordem.custo_pecas }}
+                {% else %}
+                    Não informado
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Custo do serviço:</strong>
+                {% if ordem.custo_servico %}
+                    R$ {{ ordem.custo_servico }}
+                {% else %}
+                    Não informado
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Valor total:</strong>
+                R$ {{ ordem.total_custo }}
+            </p>
+
+            <a href="{% url 'editar_ordem' ordem.id_ordem %}">
+                Editar ordem de serviço
+            </a>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>
+            Nenhuma ordem de serviço encontrada com os filtros informados.
+        </p>
+
+    {% endif %}
+
+{% endif %}
+
+<hr>
+
+<a href="{% url 'atendimento' %}">
+    Voltar para atendimento
+</a>
+
+{% endblock %}

@@ -3,6 +3,8 @@ from django.test import TestCase
 from django.urls import reverse
 from unittest.mock import Mock, patch
 import requests
+from datetime import timedelta
+from django.utils import timezone
 
 from .forms import ClienteForm, MotoForm, OrdemServicoForm
 from .models import Cliente, Moto, OrdemServico
@@ -1213,4 +1215,402 @@ class EdicaoClienteMotoViewTest(TestCase):
         self.assertEqual(
             self.moto.modelo,
             "Fazer 250",
+        )
+
+class EdicaoOrdemServicoViewTest(TestCase):
+
+    def setUp(self):
+        self.usuario = User.objects.create_user(
+            username="funcionario",
+            password="senha-teste",
+        )
+
+        self.cliente = Cliente.objects.create(
+            nome="João da Silva",
+            numero_celular="12999999999",
+        )
+
+        self.moto = Moto.objects.create(
+            placa="ABC1D23",
+            marca="Honda",
+            modelo="CG 160",
+            cliente=self.cliente,
+        )
+
+        self.ordem = OrdemServico.objects.create(
+            descricao="Revisão da motocicleta.",
+            cliente=self.cliente,
+            moto=self.moto,
+        )
+
+        self.client.login(
+            username="funcionario",
+            password="senha-teste",
+        )
+
+    def test_usuario_nao_autenticado_e_redirecionado(self):
+        self.client.logout()
+
+        response = self.client.get(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            )
+        )
+
+        self.assertRedirects(
+            response,
+            f"/login/?next=/ordem/editar/{self.ordem.id_ordem}/",
+        )
+
+    def test_tela_de_edicao_carrega_dados_da_ordem(self):
+        response = self.client.get(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertEqual(
+            response.context["form"].initial["descricao"],
+            "Revisão da motocicleta.",
+        )
+
+        self.assertEqual(
+            response.context["form"].initial["status_ordem"],
+            OrdemServico.Status.EM_ANDAMENTO,
+        )
+
+    def test_editar_ordem_atualiza_dados(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Troca de óleo e revisão completa.",
+                "custo_pecas": "150.00",
+                "custo_servico": "200.00",
+                "status_ordem": OrdemServico.Status.EM_ANDAMENTO,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+        )
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.descricao,
+            "Troca de óleo e revisão completa.",
+        )
+
+        self.assertEqual(
+            self.ordem.custo_pecas,
+            150,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_servico,
+            200,
+        )
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.EM_ANDAMENTO,
+        )
+
+    def test_edicao_exibe_mensagem_de_sucesso(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Revisão atualizada.",
+                "custo_pecas": "100.00",
+                "custo_servico": "200.00",
+                "status_ordem": OrdemServico.Status.EM_ANDAMENTO,
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(
+            response,
+            "Ordem de serviço atualizada com sucesso.",
+        )
+
+    def test_finalizar_ordem_com_custo_de_pecas(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Serviço finalizado.",
+                "custo_pecas": "300.00",
+                "custo_servico": "",
+                "status_ordem": OrdemServico.Status.FINALIZADA,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+        )
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.FINALIZADA,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_pecas,
+            300,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_servico,
+            0,
+        )
+
+        self.assertIsNotNone(
+            self.ordem.data_fechamento,
+        )
+
+    def test_finalizar_ordem_com_custo_de_servico(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Serviço finalizado.",
+                "custo_pecas": "",
+                "custo_servico": "250.00",
+                "status_ordem": OrdemServico.Status.FINALIZADA,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+        )
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.FINALIZADA,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_pecas,
+            0,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_servico,
+            250,
+        )
+
+        self.assertIsNotNone(
+            self.ordem.data_fechamento,
+        )
+
+    def test_finalizar_ordem_sem_custos_e_rejeitada(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Tentativa de finalizar.",
+                "custo_pecas": "",
+                "custo_servico": "",
+                "status_ordem": OrdemServico.Status.FINALIZADA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.EM_ANDAMENTO,
+        )
+
+        self.assertIsNone(
+            self.ordem.data_fechamento,
+        )
+
+        self.assertContains(
+            response,
+            "Não é possível encerrar ou cancelar a ordem",
+        )
+
+    def test_cancelar_ordem_sem_custos_e_rejeitada(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Tentativa de cancelamento.",
+                "custo_pecas": "",
+                "custo_servico": "",
+                "status_ordem": OrdemServico.Status.CANCELADA,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.EM_ANDAMENTO,
+        )
+
+        self.assertIsNone(
+            self.ordem.data_fechamento,
+        )
+
+        self.assertContains(
+            response,
+            "Não é possível encerrar ou cancelar a ordem",
+        )
+
+    def test_cancelar_ordem_com_custo_registra_data_de_fechamento(self):
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Ordem cancelada.",
+                "custo_pecas": "50.00",
+                "custo_servico": "",
+                "status_ordem": OrdemServico.Status.CANCELADA,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+        )
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.CANCELADA,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_pecas,
+            50,
+        )
+
+        self.assertEqual(
+            self.ordem.custo_servico,
+            0,
+        )
+
+        self.assertIsNotNone(
+            self.ordem.data_fechamento,
+        )
+
+    def test_reabrir_ordem_remove_data_de_fechamento(self):
+        self.ordem.status_ordem = OrdemServico.Status.FINALIZADA
+        self.ordem.custo_pecas = 100
+        self.ordem.custo_servico = 200
+        self.ordem.data_fechamento = timezone.now()
+        self.ordem.save()
+
+        response = self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Ordem reaberta.",
+                "custo_pecas": "100.00",
+                "custo_servico": "200.00",
+                "status_ordem": OrdemServico.Status.EM_ANDAMENTO,
+            },
+        )
+
+        self.assertRedirects(
+            response,
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+        )
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.EM_ANDAMENTO,
+        )
+
+        self.assertIsNone(
+            self.ordem.data_fechamento,
+        )
+
+    def test_ordem_finalizada_mantem_data_ao_ser_editada_sem_mudar_status(self):
+        data_fechamento = timezone.now() - timedelta(days=1)
+
+        self.ordem.status_ordem = OrdemServico.Status.FINALIZADA
+        self.ordem.custo_pecas = 100
+        self.ordem.custo_servico = 200
+        self.ordem.data_fechamento = data_fechamento
+        self.ordem.save()
+
+        self.client.post(
+            reverse(
+                "editar_ordem",
+                kwargs={"ordem_id": self.ordem.id_ordem},
+            ),
+            {
+                "descricao": "Descrição alterada após finalização.",
+                "custo_pecas": "150.00",
+                "custo_servico": "250.00",
+                "status_ordem": OrdemServico.Status.FINALIZADA,
+            },
+        )
+
+        self.ordem.refresh_from_db()
+
+        self.assertEqual(
+            self.ordem.status_ordem,
+            OrdemServico.Status.FINALIZADA,
+        )
+
+        self.assertEqual(
+            self.ordem.data_fechamento,
+            data_fechamento,
         )

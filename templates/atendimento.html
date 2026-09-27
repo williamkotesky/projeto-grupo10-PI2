@@ -187,4 +187,26 @@
     {% endif %}
 {% endif %}
 
+<hr>
+
+<h2>Consultar ordens de serviço</h2>
+
+<p>
+    <a href="{% url 'ultimas_ordens' %}">
+        Últimas ordens de serviço
+    </a>
+</p>
+
+<p>
+    <a href="{% url 'buscar_ordem_placa' %}">
+        Buscar ordem por placa
+    </a>
+</p>
+
+<p>
+    <a href="{% url 'buscar_ordens_filtros' %}">
+        Buscar ordens com filtros
+    </a>
+</p>
+
 {% endblock %}
