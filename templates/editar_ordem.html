@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Editar ordem de serviço{% endblock %}
+
+{% block content %}
+
+<h1>Editar ordem de serviço #{{ ordem.id_ordem }}</h1>
+
+<p>
+    Atualize os dados da ordem de serviço.
+</p>
+
+<p>
+    Cliente: {{ ordem.cliente.nome }}
+</p>
+
+<p>
+    Moto: {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
+</p>
+
+<p>
+    Placa: {{ ordem.moto.placa }}
+</p>
+
+<p>
+    Status: {{ ordem.get_status_ordem_display }}
+</p>
+
+<form method="post">
+
+    {% csrf_token %}
+
+    {{ form.as_p }}
+
+    <button type="submit">
+        Salvar alterações
+    </button>
+
+</form>
+
+{% if messages %}
+    {% for message in messages %}
+        <p>{{ message }}</p>
+    {% endfor %}
+{% endif %}
+
+<a href="{% url 'ultimas_ordens' %}">
+    Voltar para ordens de serviço
+</a>
+
+{% endblock %}

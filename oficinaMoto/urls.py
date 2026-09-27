@@ -2,6 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 from . import views
 from . import views_edicao
+from . import views_buscas
 
 urlpatterns = [
     path("", views.home, name="home"),
@@ -82,5 +83,28 @@ urlpatterns = [
         name="editar_moto",
     ),
 
+    path(
+        "ordens/ultimas/",
+        views_buscas.ultimas_ordens,
+        name="ultimas_ordens",
+    ),
+    
+    path(
+        "ordens/buscar/placa/",
+        views_buscas.buscar_ordem_por_placa,
+        name="buscar_ordem_placa",
+    ),
+    
+    path(
+        "ordens/buscar/filtros/",
+        views_buscas.buscar_ordens_filtros,
+        name="buscar_ordens_filtros",
+    ),
+
+    path(
+    "ordem/editar/<int:ordem_id>/",
+    views_edicao.editar_ordem,
+    name="editar_ordem",
+),
 
 ]

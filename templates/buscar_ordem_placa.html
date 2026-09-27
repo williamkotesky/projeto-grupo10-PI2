@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}Buscar OS por Placa{% endblock %}
+
+{% block content %}
+
+<h1>Buscar ordem de serviço por placa</h1>
+
+<form method="get">
+
+    <label for="placa">
+        Placa da moto:
+    </label>
+
+    <input
+        type="text"
+        id="placa"
+        name="placa"
+        value="{{ placa_buscada }}"
+        required
+        maxlength="10"
+    >
+
+    <button type="submit">
+        Buscar
+    </button>
+
+</form>
+
+{% if ordens is not None %}
+
+    <hr>
+
+    <h2>Resultados</h2>
+
+    {% if ordens %}
+
+        {% for ordem in ordens %}
+
+            <hr>
+
+            <h3>OS #{{ ordem.id_ordem }}</h3>
+
+            <h3>Cliente</h3>
+
+            <p>
+                <strong>Nome:</strong>
+                {{ ordem.cliente.nome }}
+            </p>
+
+            <p>
+                <strong>Celular:</strong>
+                {{ ordem.cliente.numero_celular }}
+            </p>
+
+            <a href="{% url 'editar_cliente' ordem.cliente.id_cliente %}">
+                Editar cliente
+            </a>
+
+            <h3>Moto</h3>
+
+            <p>
+                <strong>Marca:</strong>
+                {{ ordem.moto.marca }}
+            </p>
+
+            <p>
+                <strong>Modelo:</strong>
+                {{ ordem.moto.modelo }}
+            </p>
+
+            <p>
+                <strong>Placa:</strong>
+                {{ ordem.moto.placa }}
+            </p>
+
+            <a href="{% url 'editar_moto' ordem.moto.id_moto %}">
+                Editar moto
+            </a>
+
+            <h3>Ordem de Serviço</h3>
+
+            <p>
+                <strong>Descrição:</strong>
+                {{ ordem.descricao }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+                {{ ordem.get_status_ordem_display }}
+            </p>
+
+            <p>
+                <strong>Data de abertura:</strong>
+                {{ ordem.data_abertura|date:"d/m/Y H:i" }}
+            </p>
+
+            <p>
+                <strong>Data de encerramento:</strong>
+                {% if ordem.data_fechamento %}
+                    {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
+                {% else %}
+                    Não encerrada
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Custo das peças:</strong>
+                {% if ordem.custo_pecas %}
+                    R$ {{ ordem.custo_pecas }}
+                {% else %}
+                    Não informado
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Custo do serviço:</strong>
+                {% if ordem.custo_servico %}
+                    R$ {{ ordem.custo_servico }}
+                {% else %}
+                    Não informado
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Valor total:</strong>
+                R$ {{ ordem.total_custo }}
+            </p>
+
+            <a href="{% url 'editar_ordem' ordem.id_ordem %}">
+                Editar ordem de serviço
+            </a>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>
+            Nenhuma ordem de serviço encontrada para esta placa.
+        </p>
+
+    {% endif %}
+
+{% endif %}
+
+<hr>
+
+<a href="{% url 'atendimento' %}">
+    Voltar para atendimento
+</a>
+
+{% endblock %}
