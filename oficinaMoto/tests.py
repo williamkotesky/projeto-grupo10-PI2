@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import requests
 from datetime import timedelta
 from django.utils import timezone
+from django.core.cache import cache
 
 from .forms import ClienteForm, MotoForm, OrdemServicoForm
 from .models import Cliente, Moto, OrdemServico
@@ -1613,4 +1614,239 @@ class EdicaoOrdemServicoViewTest(TestCase):
         self.assertEqual(
             self.ordem.data_fechamento,
             data_fechamento,
+        )
+
+class BuscaOrdemPublicaViewTest(TestCase):
+
+    def setUp(self):
+        cache.clear()
+
+        self.cliente = Cliente.objects.create(
+            nome="João da Silva",
+            numero_celular="12999999999",
+        )
+
+        self.moto = Moto.objects.create(
+            placa="ABC1D23",
+            marca="Honda",
+            modelo="CG 160",
+            cliente=self.cliente,
+        )
+
+        self.ordem = OrdemServico.objects.create(
+            descricao="Revisão completa da motocicleta.",
+            cliente=self.cliente,
+            moto=self.moto,
+            custo_pecas=150,
+            custo_servico=200,
+            status_ordem=OrdemServico.Status.EM_ANDAMENTO,
+        )
+
+    def tearDown(self):
+        cache.clear()
+
+    def test_home_publica_pode_ser_acessada_sem_login(self):
+        response = self.client.get(
+            reverse("home")
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_busca_por_codigo_encontra_ordem(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["ordem"],
+            self.ordem,
+        )
+
+    def test_busca_por_codigo_ignora_maiusculas_e_minusculas(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso.lower(),
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.context["ordem"],
+            self.ordem,
+        )
+
+    def test_busca_por_codigo_inexistente(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": "XXXXXXXX",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(
+            response.context.get("ordem")
+        )
+        self.assertContains(
+            response,
+            "Não foi encontrada uma ordem de serviço para esse código.",
+        )
+
+    def test_busca_sem_codigo(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Informe o código de acesso.",
+        )
+
+    def test_busca_exibe_dados_do_cliente_e_da_moto(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(
+            response,
+            "João da Silva",
+        )
+        self.assertContains(
+            response,
+            "ABC1D23",
+        )
+        self.assertContains(
+            response,
+            "Honda",
+        )
+        self.assertContains(
+            response,
+            "CG 160",
+        )
+
+    def test_busca_exibe_status_e_valores_da_ordem(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(
+            response,
+            "Em andamento",
+        )
+        self.assertContains(
+            response,
+            "R$ 150,00",
+        )
+        self.assertContains(
+            response,
+            "R$ 200,00",
+        )
+        self.assertContains(
+            response,
+            "R$ 350,00",
+        )
+
+    def test_busca_exibe_data_de_abertura(self):
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertContains(
+            response,
+            self.ordem.data_abertura.strftime("%d/%m/%Y"),
+        )
+
+    def test_ordem_em_andamento_nao_exibe_data_de_fechamento(self):
+        self.ordem.data_fechamento = None
+        self.ordem.save()
+
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(
+            response,
+            "Data de fechamento:",
+        )
+
+    def test_ordem_finalizada_exibe_data_de_fechamento(self):
+        self.ordem.status_ordem = OrdemServico.Status.FINALIZADA
+        self.ordem.data_fechamento = timezone.now()
+        self.ordem.save()
+
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Data de fechamento:",
+        )
+
+    def test_busca_limita_tentativas_por_ip(self):
+        for _ in range(5):
+            response = self.client.post(
+                reverse("home"),
+                {
+                    "codigo_acesso": "XXXXXXXX",
+                },
+            )
+
+            self.assertEqual(
+                response.status_code,
+                200,
+            )
+
+        response = self.client.post(
+            reverse("home"),
+            {
+                "codigo_acesso": self.ordem.codigo_acesso,
+            },
+        )
+
+        self.assertEqual(
+            response.status_code,
+            200,
+        )
+
+        self.assertContains(
+            response,
+            "Muitas tentativas de consulta.",
+        )
+
+        self.assertNotIn(
+            "ordem",
+            response.context,
         )

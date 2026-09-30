@@ -134,3 +134,10 @@ MAILERS = {
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/atendimento/"
 LOGOUT_REDIRECT_URL = "/login/"
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "oficina-moto-cache",
+    }
+}

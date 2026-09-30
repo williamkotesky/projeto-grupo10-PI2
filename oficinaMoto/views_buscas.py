@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import DecimalField, F, Value
 from django.db.models.functions import Coalesce
 from django.shortcuts import render
+from django.core.cache import cache
 
 from .models import OrdemServico
 
@@ -54,6 +55,27 @@ def ordens_com_total():
         )
     )
 
+def buscar_ordem_por_codigo(codigo, ip):
+    codigo = codigo.strip().upper()
+
+    if not codigo:
+        return None, "codigo_vazio"
+
+    chave = f"busca_os_{ip}"
+    tentativas = cache.get(chave, 0)
+
+    if tentativas >= 5:
+        return None, "limite"
+
+    cache.set(chave, tentativas + 1, 60)
+
+    ordem = (
+        ordens_com_total()
+        .filter(codigo_acesso=codigo)
+        .first()
+    )
+
+    return ordem, None
 
 @login_required
 def ultimas_ordens(request):
@@ -146,3 +168,4 @@ def buscar_ordens_filtros(request):
             "status_choices": OrdemServico.Status.choices,
         },
     )
+
