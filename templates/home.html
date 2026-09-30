@@ -1,8 +1,99 @@
 {% extends "base.html" %}
 
-{% block title %}Início - Oficina MP Motos {% endblock %}
+{% block title %}Início - Oficina MP Motos{% endblock %}
 
 {% block content %}
-    <h1>Bem-vindo à Oficina MP Motos</h1>
-    <p>Sistema de gerenciamento da oficina.</p>
+
+
+<h1>Bem-vindo à Oficina MP Motos</h1>
+
+<p>Sistema de gerenciamento da oficina.</p>
+
+<h2>Consultar ordem de serviço</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <label for="codigo_acesso">
+        Código de acesso:
+    </label>
+
+    <input
+        type="text"
+        id="codigo_acesso"
+        name="codigo_acesso"
+        maxlength="8"
+        value="{{ codigo_buscado|default:'' }}"
+    >
+
+    <button type="submit">
+        Consultar
+    </button>
+</form>
+
+{% if erro_busca %}
+    <p>{{ erro_busca }}</p>
+{% endif %}
+
+{% if ordem %}
+    <h2>Cliente</h2>
+
+    <p>
+        <strong>Nome:</strong>
+        {{ ordem.cliente.nome }}
+    </p>
+
+    <h2>Moto</h2>
+
+    <p>
+        <strong>Placa:</strong>
+        {{ ordem.moto.placa }}
+    </p>
+
+    <p>
+        <strong>Marca:</strong>
+        {{ ordem.moto.marca }}
+    </p>
+
+    <p>
+        <strong>Modelo:</strong>
+        {{ ordem.moto.modelo }}
+    </p>
+
+    <h2>Ordem de Serviço</h2>
+
+    <p>
+        <strong>Status:</strong>
+        {{ ordem.get_status_ordem_display }}
+    </p>
+
+    <p>
+        <strong>Custo de peças:</strong>
+        R$ {{ custo_pecas }}
+    </p>
+
+    <p>
+        <strong>Custo de serviço:</strong>
+        R$ {{ custo_servico }}
+    </p>
+
+    <p>
+        <strong>Total:</strong>
+        R$ {{ total_custo }}
+    </p>
+
+    <p>
+        <strong>Data de abertura:</strong>
+        {{ ordem.data_abertura|date:"d/m/Y H:i" }}
+    </p>
+
+    {% if mostrar_data_fechamento %}
+        <p>
+            <strong>Data de fechamento:</strong>
+            {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
+        </p>
+    {% endif %}
+{% endif %}
+
+
 {% endblock %}

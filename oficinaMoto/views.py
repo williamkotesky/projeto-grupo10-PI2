@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import requests
+from .views_buscas import buscar_ordem_por_codigo
 
 from .forms import OrdemServicoForm, MotoForm, ClienteForm
 from .models import Moto, OrdemServico, Cliente
@@ -23,7 +24,54 @@ from .services.fipe import (
 
 
 def home(request):
-    return render(request, "home.html")
+    contexto = {}
+
+    if request.method == "POST":
+        codigo = request.POST.get("codigo_acesso", "")
+
+        ordem, erro = buscar_ordem_por_codigo(
+            codigo,
+            request.META.get("REMOTE_ADDR"),
+        )
+
+        contexto["codigo_buscado"] = codigo
+
+        if erro == "limite":
+            contexto["erro_busca"] = (
+                "Muitas tentativas de consulta. "
+                "Tente novamente em alguns instantes."
+            )
+
+        elif erro == "codigo_vazio":
+            contexto["erro_busca"] = (
+                "Informe o código de acesso."
+            )
+
+        elif ordem is None:
+            contexto["erro_busca"] = (
+                "Não foi encontrada uma ordem de serviço para esse código."
+            )
+
+        else:
+            contexto["ordem"] = ordem
+            contexto["mostrar_data_fechamento"] = (
+                ordem.status_ordem
+                != OrdemServico.Status.EM_ANDAMENTO
+            )
+        
+            contexto["custo_pecas"] = (
+                f"{ordem.custo_pecas or 0:.2f}".replace(".", ",")
+            )
+        
+            contexto["custo_servico"] = (
+                f"{ordem.custo_servico or 0:.2f}".replace(".", ",")
+            )
+        
+            contexto["total_custo"] = (
+                f"{ordem.total_custo:.2f}".replace(".", ",")
+            )
+
+    return render(request, "home.html", contexto)
 
 @login_required
 def fipe_marcas(request):
