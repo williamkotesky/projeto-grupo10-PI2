@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 import requests
 from .views_buscas import buscar_ordem_por_codigo
+from django.contrib.auth.views import LoginView
+from .forms import LoginForm
 
 from .forms import OrdemServicoForm, MotoForm, ClienteForm
 from .models import Moto, OrdemServico, Cliente
@@ -21,6 +23,11 @@ from .services.fipe import (
     buscar_anos,
     buscar_preco,
 )
+
+
+class OficinaLoginView(LoginView):
+    template_name = "registration/login.html"
+    authentication_form = LoginForm
 
 
 def home(request):

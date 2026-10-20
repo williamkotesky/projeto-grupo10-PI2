@@ -1,99 +1,242 @@
+
 {% extends "base.html" %}
 
 {% block title %}Início - Oficina MP Motos{% endblock %}
 
 {% block content %}
 
+<div class="home-page">
 
-<h1>Bem-vindo à Oficina MP Motos</h1>
+    <section class="home-intro mb-4" aria-labelledby="titulo-pagina">
+        <h1 id="titulo-pagina" class="display-5 fw-bold">
+            Bem-vindo à Oficina MP Motos
+        </h1>
 
-<p>Sistema de gerenciamento da oficina.</p>
-
-<h2>Consultar ordem de serviço</h2>
-
-<form method="post">
-    {% csrf_token %}
-
-    <label for="codigo_acesso">
-        Código de acesso:
-    </label>
-
-    <input
-        type="text"
-        id="codigo_acesso"
-        name="codigo_acesso"
-        maxlength="8"
-        value="{{ codigo_buscado|default:'' }}"
-    >
-
-    <button type="submit">
-        Consultar
-    </button>
-</form>
-
-{% if erro_busca %}
-    <p>{{ erro_busca }}</p>
-{% endif %}
-
-{% if ordem %}
-    <h2>Cliente</h2>
-
-    <p>
-        <strong>Nome:</strong>
-        {{ ordem.cliente.nome }}
-    </p>
-
-    <h2>Moto</h2>
-
-    <p>
-        <strong>Placa:</strong>
-        {{ ordem.moto.placa }}
-    </p>
-
-    <p>
-        <strong>Marca:</strong>
-        {{ ordem.moto.marca }}
-    </p>
-
-    <p>
-        <strong>Modelo:</strong>
-        {{ ordem.moto.modelo }}
-    </p>
-
-    <h2>Ordem de Serviço</h2>
-
-    <p>
-        <strong>Status:</strong>
-        {{ ordem.get_status_ordem_display }}
-    </p>
-
-    <p>
-        <strong>Custo de peças:</strong>
-        R$ {{ custo_pecas }}
-    </p>
-
-    <p>
-        <strong>Custo de serviço:</strong>
-        R$ {{ custo_servico }}
-    </p>
-
-    <p>
-        <strong>Total:</strong>
-        R$ {{ total_custo }}
-    </p>
-
-    <p>
-        <strong>Data de abertura:</strong>
-        {{ ordem.data_abertura|date:"d/m/Y H:i" }}
-    </p>
-
-    {% if mostrar_data_fechamento %}
-        <p>
-            <strong>Data de fechamento:</strong>
-            {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
+        <p class="lead text-secondary mb-0">
+            Consulte as informações da sua ordem de serviço usando o código
+            fornecido pela oficina.
         </p>
-    {% endif %}
-{% endif %}
+    </section>
 
+    <section class="card shadow-sm mb-4"
+             aria-labelledby="titulo-consulta">
+        <div class="card-body p-4">
+
+            <div class="d-flex flex-wrap justify-content-between
+                        align-items-start gap-3 mb-3">
+                <div>
+                    <h2 id="titulo-consulta" class="h4 mb-1">
+                        Consultar ordem de serviço
+                    </h2>
+                    <p class="text-secondary mb-0">
+                        Informe o código de acesso de 8 caracteres.
+                    </p>
+                </div>
+
+                <div class="font-controls"
+                     role="group"
+                     aria-label="Controles de tamanho do texto">
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="diminuir-fonte"
+                            aria-label="Diminuir tamanho do texto"
+                            title="Diminuir fonte">
+                        A−
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="restaurar-fonte"
+                            aria-label="Restaurar tamanho original do texto"
+                            title="Restaurar fonte">
+                        A
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            id="aumentar-fonte"
+                            aria-label="Aumentar tamanho do texto"
+                            title="Aumentar fonte">
+                        A+
+                    </button>
+                </div>
+            </div>
+
+            <form method="post"
+                  action="{% url 'home' %}"
+                  aria-describedby="ajuda-codigo">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label for="codigo_acesso" class="form-label fw-semibold">
+                        Código de acesso
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control form-control-lg"
+                        id="codigo_acesso"
+                        name="codigo_acesso"
+                        maxlength="8"
+                        minlength="8"
+                        pattern="[A-Za-z0-9]{8}"
+                        title="Informe os 8 caracteres do código de acesso."
+                        value="{{ codigo_buscado|default:'' }}"
+                        placeholder="Ex.: ABC12345"
+                        autocomplete="off"
+                        autocapitalize="characters"
+                        spellcheck="false"
+                        aria-describedby="ajuda-codigo"
+                        required
+                    >
+
+                    <div id="ajuda-codigo" class="form-text">
+                        Digite os 8 caracteres do código recebido da oficina.
+                        Não é necessário fazer login.
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    Consultar ordem
+                </button>
+            </form>
+
+            {% if erro_busca %}
+                <div class="alert alert-warning mt-3 mb-0"
+                     role="alert"
+                     aria-live="polite">
+                    {{ erro_busca }}
+                </div>
+            {% endif %}
+
+        </div>
+    </section>
+
+    {% if ordem %}
+        <section aria-labelledby="titulo-resultado"
+                 aria-live="polite">
+
+            <h2 id="titulo-resultado" class="h3 mb-3">
+                Resultado da consulta
+            </h2>
+
+            <div class="row g-3">
+
+                <div class="col-12 col-lg-6">
+                    <section class="card h-100 shadow-sm"
+                             aria-labelledby="titulo-cliente">
+                        <div class="card-body p-4">
+                            <h3 id="titulo-cliente" class="h5">
+                                Cliente
+                            </h3>
+
+                            <p class="mb-0">
+                                <strong>Nome:</strong>
+                                {{ ordem.cliente.nome }}
+                            </p>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <section class="card h-100 shadow-sm"
+                             aria-labelledby="titulo-moto">
+                        <div class="card-body p-4">
+                            <h3 id="titulo-moto" class="h5">
+                                Motocicleta
+                            </h3>
+
+                            <dl class="mb-0">
+                                <dt>Placa</dt>
+                                <dd>{{ ordem.moto.placa }}</dd>
+
+                                <dt>Marca</dt>
+                                <dd>{{ ordem.moto.marca }}</dd>
+
+                                <dt>Modelo</dt>
+                                <dd class="mb-0">{{ ordem.moto.modelo }}</dd>
+                            </dl>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="col-12">
+                    <section class="card shadow-sm"
+                             aria-labelledby="titulo-os">
+                        <div class="card-body p-4">
+
+                            <h3 id="titulo-os" class="h5 mb-3">
+                                Ordem de serviço
+                            </h3>
+
+                            <p>
+                                <strong>Status:</strong>
+                                <span class="badge text-bg-primary">
+                                    {{ ordem.get_status_ordem_display }}
+                                </span>
+                            </p>
+
+                            <div class="row g-3 mb-3">
+                                <div class="col-12 col-md-4">
+                                    <div class="cost-item h-100">
+                                        <p class="text-secondary mb-1">
+                                            Custo de peças
+                                        </p>
+                                        <p class="h5 mb-0">
+                                            R$ {{ custo_pecas }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-4">
+                                    <div class="cost-item h-100">
+                                        <p class="text-secondary mb-1">
+                                            Custo de serviço
+                                        </p>
+                                        <p class="h5 mb-0">
+                                            R$ {{ custo_servico }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-md-4">
+                                    <div class="cost-item cost-total h-100">
+                                        <p class="mb-1">Valor total</p>
+                                        <p class="h4 mb-0">
+                                            R$ {{ total_custo }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4 col-md-3">
+                                    Data de abertura:
+                                </dt>
+                                <dd class="col-sm-8 col-md-9">
+                                    {{ ordem.data_abertura|date:"d/m/Y H:i" }}
+                                </dd>
+
+                                {% if mostrar_data_fechamento %}
+                                    <dt class="col-sm-4 col-md-3">
+                                        Data de fechamento:
+                                    </dt>
+                                    <dd class="col-sm-8 col-md-9 mb-0">
+                                        {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
+                                    </dd>
+                                {% endif %}
+                            </dl>
+
+                        </div>
+                    </section>
+                </div>
+
+            </div>
+        </section>
+    {% endif %}
+
+</div>
 
 {% endblock %}

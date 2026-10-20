@@ -1,7 +1,40 @@
 from django import forms
 import re
+from django.contrib.auth.forms import AuthenticationForm
 
 from .models import OrdemServico
+
+def aplicar_classes_bootstrap(form):
+    for campo in form.fields.values():
+        widget = campo.widget
+
+        if isinstance(widget, forms.Select):
+            classe = "form-select"
+        elif isinstance(widget, forms.CheckboxInput):
+            classe = "form-check-input"
+        else:
+            classe = "form-control"
+
+        classes_existentes = widget.attrs.get("class", "")
+        widget.attrs["class"] = f"{classes_existentes} {classe}".strip()
+
+
+class LoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        aplicar_classes_bootstrap(self)
+
+        self.fields["username"].widget.attrs.update({
+            "autofocus": True,
+            "autocomplete": "username",
+            "placeholder": "Digite seu usuário",
+        })
+
+        self.fields["password"].widget.attrs.update({
+            "autocomplete": "current-password",
+            "placeholder": "Digite sua senha",
+        })
 
 
 class OrdemServicoForm(forms.Form):
@@ -25,6 +58,9 @@ class OrdemServicoForm(forms.Form):
             }
         ),
     )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        aplicar_classes_bootstrap(self)
 
 class EditarOrdemServicoForm(forms.Form):
     descricao = forms.CharField(
@@ -69,6 +105,9 @@ class EditarOrdemServicoForm(forms.Form):
             choices=OrdemServico.Status.choices,
             required=True,
         )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        aplicar_classes_bootstrap(self)
 
 
 class MotoForm(forms.Form):
@@ -137,6 +176,10 @@ class MotoForm(forms.Form):
         ),
     )
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        aplicar_classes_bootstrap(self)
+
 
 class ClienteForm(forms.Form):
     nome = forms.CharField(
@@ -175,3 +218,9 @@ class ClienteForm(forms.Form):
             }
         ),
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        aplicar_classes_bootstrap(self)
+
+    

@@ -1,152 +1,249 @@
+
 {% extends "base.html" %}
 
 {% block title %}Buscar OS por Placa{% endblock %}
 
 {% block content %}
+<div class="container py-4 py-md-5 pagina-busca">
 
-<h1>Buscar ordem de serviço por placa</h1>
-
-<form method="get">
-
-    <label for="placa">
-        Placa da moto:
-    </label>
-
-    <input
-        type="text"
-        id="placa"
-        name="placa"
-        value="{{ placa_buscada }}"
-        required
-        maxlength="10"
-    >
-
-    <button type="submit">
-        Buscar
-    </button>
-
-</form>
-
-{% if ordens is not None %}
-
-    <hr>
-
-    <h2>Resultados</h2>
-
-    {% if ordens %}
-
-        {% for ordem in ordens %}
-
-            <hr>
-
-            <h3>OS #{{ ordem.id_ordem }}</h3>
-
-            <h3>Cliente</h3>
-
-            <p>
-                <strong>Nome:</strong>
-                {{ ordem.cliente.nome }}
-            </p>
-
-            <p>
-                <strong>Celular:</strong>
-                {{ ordem.cliente.numero_celular }}
-            </p>
-
-            <a href="{% url 'editar_cliente' ordem.cliente.id_cliente %}">
-                Editar cliente
-            </a>
-
-            <h3>Moto</h3>
-
-            <p>
-                <strong>Marca:</strong>
-                {{ ordem.moto.marca }}
-            </p>
-
-            <p>
-                <strong>Modelo:</strong>
-                {{ ordem.moto.modelo }}
-            </p>
-
-            <p>
-                <strong>Placa:</strong>
-                {{ ordem.moto.placa }}
-            </p>
-
-            <a href="{% url 'editar_moto' ordem.moto.id_moto %}">
-                Editar moto
-            </a>
-
-            <h3>Ordem de Serviço</h3>
-
-            <p>
-                <strong>Descrição:</strong>
-                {{ ordem.descricao }}
-            </p>
-
-            <p>
-                <strong>Status:</strong>
-                {{ ordem.get_status_ordem_display }}
-            </p>
-
-            <p>
-                <strong>Data de abertura:</strong>
-                {{ ordem.data_abertura|date:"d/m/Y H:i" }}
-            </p>
-
-            <p>
-                <strong>Data de encerramento:</strong>
-                {% if ordem.data_fechamento %}
-                    {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
-                {% else %}
-                    Não encerrada
-                {% endif %}
-            </p>
-
-            <p>
-                <strong>Custo das peças:</strong>
-                {% if ordem.custo_pecas %}
-                    R$ {{ ordem.custo_pecas }}
-                {% else %}
-                    Não informado
-                {% endif %}
-            </p>
-
-            <p>
-                <strong>Custo do serviço:</strong>
-                {% if ordem.custo_servico %}
-                    R$ {{ ordem.custo_servico }}
-                {% else %}
-                    Não informado
-                {% endif %}
-            </p>
-
-            <p>
-                <strong>Valor total:</strong>
-                R$ {{ ordem.total_custo }}
-            </p>
-
-            <a href="{% url 'editar_ordem' ordem.id_ordem %}">
-                Editar ordem de serviço
-            </a>
-
-        {% endfor %}
-
-    {% else %}
-
-        <p>
-            Nenhuma ordem de serviço encontrada para esta placa.
+    <header class="mb-4">
+        <h1 class="h2 fw-bold mb-2">Buscar ordem de serviço por placa</h1>
+        <p class="text-secondary mb-0">
+            Informe a placa da moto para consultar suas ordens de serviço.
         </p>
+    </header>
 
+    <section class="card border-0 shadow-sm rounded-3 mb-4"
+             aria-labelledby="titulo-busca">
+        <div class="card-body p-3 p-md-4">
+            <h2 id="titulo-busca" class="h5 fw-bold mb-3">
+                Buscar moto
+            </h2>
+
+            <form method="get">
+                <div class="row g-3 align-items-end">
+                    <div class="col-12 col-md-8">
+                        <label for="placa" class="form-label fw-semibold">
+                            Placa da moto
+                        </label>
+                        <input
+                            type="text"
+                            class="form-control text-uppercase"
+                            id="placa"
+                            name="placa"
+                            value="{{ placa_buscada }}"
+                            required
+                            maxlength="10"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <button class="btn btn-primary w-100" type="submit">
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    {% if ordens is not None %}
+        <section aria-labelledby="titulo-resultados">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                <h2 id="titulo-resultados" class="h4 fw-bold mb-0">
+                    Resultados da busca
+                </h2>
+
+                <span class="text-secondary small">
+                    {{ ordens|length }} ordem(ns) encontrada(s)
+                </span>
+            </div>
+
+            {% if ordens %}
+                <div class="d-flex flex-column gap-4">
+                    {% for ordem in ordens %}
+                        <article class="card border-0 shadow-sm rounded-3">
+                            <div class="card-header bg-white border-bottom px-3 px-md-4 py-3">
+                                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
+                                    <h3 class="h5 fw-bold mb-0">
+                                        Ordem de Serviço #{{ ordem.id_ordem }}
+                                    </h3>
+
+                                    <span class="badge text-bg-primary align-self-start align-self-sm-center">
+                                        {{ ordem.get_status_ordem_display }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="card-body p-3 p-md-4">
+                                <div class="row g-4">
+
+                                    <section class="col-12 col-lg-6"
+                                             aria-labelledby="cliente-{{ ordem.id_ordem }}">
+                                        <h4 id="cliente-{{ ordem.id_ordem }}"
+                                            class="h6 fw-bold mb-3">
+                                            Dados do cliente
+                                        </h4>
+
+                                        <p class="mb-2">
+                                            <span class="text-secondary">Nome:</span><br>
+                                            <strong>{{ ordem.cliente.nome }}</strong>
+                                        </p>
+
+                                        <p class="mb-3">
+                                            <span class="text-secondary">Celular:</span><br>
+                                            <strong>{{ ordem.cliente.numero_celular }}</strong>
+                                        </p>
+
+                                        <a class="btn btn-outline-primary btn-sm"
+                                           href="{% url 'editar_cliente' ordem.cliente.id_cliente %}">
+                                            Editar cliente
+                                        </a>
+                                    </section>
+
+                                    <section class="col-12 col-lg-6"
+                                             aria-labelledby="moto-{{ ordem.id_ordem }}">
+                                        <h4 id="moto-{{ ordem.id_ordem }}"
+                                            class="h6 fw-bold mb-3">
+                                            Dados da moto
+                                        </h4>
+
+                                        <p class="mb-2">
+                                            <span class="text-secondary">Marca:</span>
+                                            {{ ordem.moto.marca }}
+                                        </p>
+
+                                        <p class="mb-2">
+                                            <span class="text-secondary">Modelo:</span>
+                                            {{ ordem.moto.modelo }}
+                                        </p>
+
+                                        <p class="mb-3">
+                                            <span class="text-secondary">Placa:</span>
+                                            <strong>{{ ordem.moto.placa }}</strong>
+                                        </p>
+
+                                        <a class="btn btn-outline-primary btn-sm"
+                                           href="{% url 'editar_moto' ordem.moto.id_moto %}">
+                                            Editar moto
+                                        </a>
+                                    </section>
+
+                                    <div class="col-12">
+                                        <hr class="my-0">
+                                    </div>
+
+                                    <section class="col-12"
+                                             aria-labelledby="os-detalhes-{{ ordem.id_ordem }}">
+                                        <h4 id="os-detalhes-{{ ordem.id_ordem }}"
+                                            class="h6 fw-bold mb-3">
+                                            Detalhes da ordem de serviço
+                                        </h4>
+
+                                        <p class="mb-3">
+                                            <span class="text-secondary">Descrição:</span><br>
+                                            <span style="white-space: pre-line; overflow-wrap: anywhere;">{{ ordem.descricao }}</span>
+                                        </p>
+
+                                        <div class="row g-3">
+                                            <div class="col-12 col-sm-6">
+                                                <p class="text-secondary small mb-1">
+                                                    Data de abertura
+                                                </p>
+                                                <p class="mb-0 fw-semibold">
+                                                    {{ ordem.data_abertura|date:"d/m/Y H:i" }}
+                                                </p>
+                                            </div>
+
+                                            <div class="col-12 col-sm-6">
+                                                <p class="text-secondary small mb-1">
+                                                    Data de encerramento
+                                                </p>
+                                                <p class="mb-0 fw-semibold">
+                                                    {% if ordem.data_fechamento %}
+                                                        {{ ordem.data_fechamento|date:"d/m/Y H:i" }}
+                                                    {% else %}
+                                                        Não encerrada
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </section>
+
+                                    <div class="col-12">
+                                        <div class="bg-light rounded-3 p-3">
+                                            <h4 class="h6 fw-bold mb-3">
+                                                Custos do serviço
+                                            </h4>
+
+                                            <div class="row g-3">
+                                                <div class="col-12 col-sm-4">
+                                                    <p class="text-secondary small mb-1">
+                                                        Peças
+                                                    </p>
+                                                    <p class="mb-0 fw-semibold">
+                                                        {% if ordem.custo_pecas %}
+                                                            R$ {{ ordem.custo_pecas }}
+                                                        {% else %}
+                                                            Não informado
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+
+                                                <div class="col-12 col-sm-4">
+                                                    <p class="text-secondary small mb-1">
+                                                        Serviço
+                                                    </p>
+                                                    <p class="mb-0 fw-semibold">
+                                                        {% if ordem.custo_servico %}
+                                                            R$ {{ ordem.custo_servico }}
+                                                        {% else %}
+                                                            Não informado
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+
+                                                <div class="col-12 col-sm-4">
+                                                    <p class="text-secondary small mb-1">
+                                                        Valor total
+                                                    </p>
+                                                    <p class="mb-0 fw-bold fs-5 text-primary">
+                                                        R$ {{ ordem.total_custo }}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <a class="btn btn-primary"
+                                           href="{% url 'editar_ordem' ordem.id_ordem %}">
+                                            Editar ordem de serviço
+                                        </a>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+            {% else %}
+                <div class="alert alert-warning" role="status">
+                    Nenhuma ordem de serviço encontrada para esta placa.
+                    Confira a placa informada e tente novamente.
+                </div>
+            {% endif %}
+        </section>
     {% endif %}
 
-{% endif %}
+    <div class="mt-4">
+        <a class="btn btn-outline-secondary"
+           href="{% url 'atendimento' %}">
+            Voltar para atendimento
+        </a>
+    </div>
 
-<hr>
-
-<a href="{% url 'atendimento' %}">
-    Voltar para atendimento
-</a>
-
+</div>
 {% endblock %}

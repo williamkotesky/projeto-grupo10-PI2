@@ -3,108 +3,106 @@
 {% block title %}Ordem de Serviço Criada{% endblock %}
 
 {% block content %}
+<div class="container py-4 py-md-5 pagina-sucesso" style="max-width: 800px;">
 
-<style>
-    .pagina-sucesso {
-        max-width: 700px;
-        margin: 40px auto;
-    }
+    <header class="cabecalho-sucesso mb-4">
+        <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="rounded-circle bg-success-subtle text-success d-flex align-items-center justify-content-center flex-shrink-0"
+                 style="width: 52px; height: 52px;"
+                 aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     width="28" height="28"
+                     fill="currentColor"
+                     viewBox="0 0 16 16">
+                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0M6.97 11.03l5.03-5.03-.708-.708L6.97 9.616 4.707 7.354 4 8.06z"/>
+                </svg>
+            </div>
 
-    .cabecalho-sucesso {
-        margin-bottom: 25px;
-    }
-
-    .cabecalho-sucesso h1 {
-        margin-bottom: 10px;
-    }
-
-    .mensagem-sucesso {
-        padding: 15px;
-        margin-bottom: 25px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-    }
-
-    .dados-os {
-        padding: 20px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-    }
-
-    .dados-os p {
-        margin: 10px 0;
-    }
-
-    .codigo-acesso {
-        margin: 20px 0;
-        padding: 15px;
-        border: 1px solid #ccc;
-        border-radius: 8px;
-        text-align: center;
-    }
-
-    .codigo-acesso strong {
-        display: block;
-        font-size: 1.4em;
-        margin-top: 8px;
-        letter-spacing: 2px;
-    }
-
-    .voltar {
-        display: inline-block;
-        margin-top: 25px;
-    }
-</style>
-
-<div class="pagina-sucesso">
-
-    <div class="cabecalho-sucesso">
-        <h1>Ordem de Serviço criada</h1>
-
-        <p>
-            A ordem de serviço foi criada com sucesso.
-        </p>
-    </div>
-
-    <div class="dados-os">
-
-        <p>
-            <strong>Número da OS:</strong>
-            {{ ordem.id_ordem }}
-        </p>
-
-        <div class="codigo-acesso">
-            <span><strong>Código de acesso</strong></span>
-            <strong>{{ ordem.codigo_acesso }}</strong>
+            <div>
+                <h1 class="h2 fw-bold mb-1">Ordem de Serviço criada</h1>
+                <p class="text-secondary mb-0">
+                    A ordem de serviço foi criada com sucesso.
+                </p>
+            </div>
         </div>
+    </header>
 
-        <p>
-            <strong>Status:</strong>
-            {{ ordem.get_status_ordem_display }}
+    <section class="mensagem-sucesso alert alert-success border-0 rounded-3 mb-4"
+             role="status">
+        <strong>Cadastro concluído!</strong>
+        <p class="mb-0 mt-1">
+            A Ordem de Serviço está registrada no sistema.
         </p>
+    </section>
 
-        <p>
-            <strong>Descrição:</strong>
-            {{ ordem.descricao }}
-        </p>
+    <section class="dados-os card border-0 shadow-sm rounded-3"
+             aria-labelledby="titulo-dados-os">
+        <div class="card-body p-3 p-md-4">
 
-        <p>
-            <strong>Moto:</strong>
-            {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
-            - {{ ordem.moto.placa }}
-        </p>
+            <h2 id="titulo-dados-os" class="h5 fw-bold mb-4">
+                Resumo da Ordem de Serviço
+            </h2>
 
-        <p>
-            <strong>Cliente:</strong>
-            {{ ordem.cliente.nome }}
-        </p>
+            <div class="mb-4">
+                <p class="text-secondary small mb-1">Número da OS</p>
+                <p class="fs-5 fw-bold mb-0">#{{ ordem.id_ordem }}</p>
+            </div>
 
+            <div class="codigo-acesso bg-light border rounded-3 p-3 p-md-4 text-center mb-4">
+                <p class="text-secondary small fw-semibold text-uppercase mb-2">
+                    Código de acesso
+                </p>
+
+                <p class="fs-3 fw-bold mb-2 text-primary"
+                   style="letter-spacing: 2px; overflow-wrap: anywhere;">
+                    {{ ordem.codigo_acesso }}
+                </p>
+
+                <p class="small text-secondary mb-0">
+                    Forneça o código ao cliente para consulta ao andamento do serviço.
+                </p>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <p class="text-secondary small mb-1">Status</p>
+                    <p class="mb-0">
+                        <span class="badge text-bg-primary">
+                            {{ ordem.get_status_ordem_display }}
+                        </span>
+                    </p>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <p class="text-secondary small mb-1">Cliente</p>
+                    <p class="fw-semibold mb-0">{{ ordem.cliente.nome }}</p>
+                </div>
+
+                <div class="col-12">
+                    <p class="text-secondary small mb-1">Moto</p>
+                    <p class="fw-semibold mb-0">
+                        {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
+                    </p>
+                    <p class="text-secondary small mb-0">
+                        Placa: {{ ordem.moto.placa }}
+                    </p>
+                </div>
+
+                <div class="col-12">
+                    <p class="text-secondary small mb-1">Descrição do serviço</p>
+                    <p class="mb-0" style="white-space: pre-line; overflow-wrap: anywhere;">{{ ordem.descricao }}</p>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
+        <a class="btn btn-primary px-4"
+           href="{% url 'atendimento' %}">
+            Voltar para atendimento
+        </a>
     </div>
-
-    <a class="voltar" href="{% url 'atendimento' %}">
-        Voltar para atendimento
-    </a>
 
 </div>
-
 {% endblock %}

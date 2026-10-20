@@ -1,51 +1,95 @@
+
 {% extends "base.html" %}
 
 {% block title %}Editar ordem de serviço{% endblock %}
 
 {% block content %}
+<div class="container py-4 py-md-5 pagina-formulario" style="max-width: 900px;">
 
-<h1>Editar ordem de serviço #{{ ordem.id_ordem }}</h1>
+    <header class="mb-4">
+        <h1 class="h2 fw-bold mb-2">
+            Editar ordem de serviço #{{ ordem.id_ordem }}
+        </h1>
+        <p class="text-secondary mb-0">
+            Atualize os dados da ordem de serviço.
+        </p>
+    </header>
 
-<p>
-    Atualize os dados da ordem de serviço.
-</p>
+    <section class="card border-0 shadow-sm rounded-3 mb-4"
+             aria-labelledby="titulo-resumo">
+        <div class="card-body p-3 p-md-4">
+            <h2 id="titulo-resumo" class="h5 fw-bold mb-4">
+                Resumo da ordem
+            </h2>
 
-<p>
-    Cliente: {{ ordem.cliente.nome }}
-</p>
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <p class="text-secondary small mb-1">Cliente</p>
+                    <p class="fw-semibold mb-0">{{ ordem.cliente.nome }}</p>
+                </div>
 
-<p>
-    Moto: {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
-</p>
+                <div class="col-12 col-md-6">
+                    <p class="text-secondary small mb-1">Moto</p>
+                    <p class="fw-semibold mb-0">
+                        {{ ordem.moto.marca }} {{ ordem.moto.modelo }}
+                    </p>
+                </div>
 
-<p>
-    Placa: {{ ordem.moto.placa }}
-</p>
+                <div class="col-12 col-md-6">
+                    <p class="text-secondary small mb-1">Placa</p>
+                    <p class="fw-semibold mb-0">{{ ordem.moto.placa }}</p>
+                </div>
 
-<p>
-    Status: {{ ordem.get_status_ordem_display }}
-</p>
+                <div class="col-12 col-md-6">
+                    <p class="text-secondary small mb-1">Status atual</p>
+                    <span class="badge text-bg-primary">
+                        {{ ordem.get_status_ordem_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
 
-<form method="post">
+    <section class="card border-0 shadow-sm rounded-3 mb-4"
+             aria-labelledby="titulo-formulario">
+        <div class="card-body p-3 p-md-4">
+            <h2 id="titulo-formulario" class="h5 fw-bold mb-4">
+                Dados da ordem de serviço
+            </h2>
 
-    {% csrf_token %}
+            <form method="post">
+                {% csrf_token %}
 
-    {{ form.as_p }}
+                {{ form.as_p }}
 
-    <button type="submit">
-        Salvar alterações
-    </button>
+                <div class="d-flex flex-column flex-sm-row gap-2 mt-4">
+                    <button class="btn btn-primary px-4" type="submit">
+                        Salvar alterações
+                    </button>
 
-</form>
+                    <a class="btn btn-outline-secondary px-4"
+                       href="{% url 'ultimas_ordens' %}">
+                        Voltar para ordens de serviço
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
 
-{% if messages %}
-    {% for message in messages %}
-        <p>{{ message }}</p>
-    {% endfor %}
-{% endif %}
+    {% if messages %}
+        <section aria-label="Mensagens do sistema" class="mb-4">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show"
+                     role="status">
+                    {{ message }}
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Fechar mensagem"></button>
+                </div>
+            {% endfor %}
+        </section>
+    {% endif %}
 
-<a href="{% url 'ultimas_ordens' %}">
-    Voltar para ordens de serviço
-</a>
-
+</div>
 {% endblock %}
