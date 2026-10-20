@@ -4,209 +4,372 @@
 
 {% block content %}
 
-<h1>Atendimento</h1>
+<div class="container py-4">
+    <header class="mb-4">
+        <h1 class="mb-2">Atendimento</h1>
+        <p class="text-body-secondary mb-0">
+            Consulte clientes e motos, cadastre novos registros,
+            edite informações e gerencie ordens de serviço.
+        </p>
+    </header>
 
-<p>Informe o celular do cliente ou a placa da moto.</p>
-{% if erro %}
-    <p style="color:crimson">{{ erro }}</p>
-{% endif %}
-<form method="post">
-    {% csrf_token %}
+    <section class="card shadow-sm mb-4" aria-labelledby="titulo-atendimento">
+        <div class="card-header">
+            <h2 id="titulo-atendimento" class="h4 mb-0">
+                1. Buscar cliente ou moto
+            </h2>
+        </div>
 
-    <label for="busca">Celular ou placa:</label>
-    <input type="text" id="busca" name="busca" required maxlength="20">
-
-    <button type="submit">Buscar</button>
-</form>
-{% if tipo_busca %}
-    <hr>
-
-    {% if tipo_busca == "celular" %}
-
-        <h2>Busca por celular</h2>
-
-        {% if cliente %}
-            <h2>Cliente encontrado</h2>
-        
-            <p>Nome: {{ cliente.nome }}</p>
-            <p>Celular: {{ cliente.numero_celular }}</p>
-        
-            <a href="{% url 'editar_cliente' cliente.id_cliente %}">
-                Editar cliente
-            </a>
-
-            <h3>Motos cadastradas</h3>
-        
-            {% if motos %}
-                <ul>
-                    {% for moto in motos %}
-                        <form method="post">
-                            {% csrf_token %}
-                    
-                            <input type="hidden" name="moto_id" value="{{ moto.id_moto }}">
-                            <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
-                    
-                            <p>
-                                {{ moto.marca }} {{ moto.modelo }} - {{ moto.placa }}
-                    
-                                <button type="submit" name="acao" value="selecionar_moto">
-                                    Abrir ordem de serviço
-                                </button>
-                                
-                                <a href="{% url 'editar_moto' moto.id_moto %}">
-                                    Editar moto
-                                </a>
-                            </p>
-                        </form>
-                    {% endfor %}
-                </ul>
-                <form method="post">
-                    {% csrf_token %}
-                
-                    <input type="hidden" name="acao" value="nova_moto">
-                    <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
-                
-                    <button type="submit">
-                        Cadastrar nova moto
-                    </button>
-                </form>
-            {% else %}
-                <p>Este cliente ainda não possui motos cadastradas.</p>
-                <form method="post">
-                    {% csrf_token %}
-                
-                    <input type="hidden" name="acao" value="nova_moto">
-                    <input type="hidden" name="cliente_id" value="{{ cliente.id_cliente }}">
-                
-                    <button type="submit">
-                        Cadastrar nova moto
-                    </button>
-                </form>
-            {% endif %}
-        
-        {% else %}
-            <p>Nenhum cliente encontrado.</p>
-        
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="acao" value="novo_cliente">
-                <input type="hidden" name="celular" value="{{ celular_buscado }}">
-        
-                <button type="submit">
-                    Cadastrar novo cliente
-                </button>
-            </form>
-        {% endif %}
-
-    {% elif tipo_busca == "placa" %}
-
-        <h2>Busca por placa</h2>
-
-        {% if moto %}
-            <h2>Cliente</h2>
-            
-            <p>Nome: {{ moto.cliente.nome }}</p>
-            <p>Celular: {{ moto.cliente.numero_celular }}</p>
-            
-            <a href="{% url 'editar_cliente' moto.cliente.id_cliente %}">
-                Editar cliente
-            </a>
-            
-            <h2>Moto encontrada</h2>
-            
-            <p>Modelo: {{ moto.modelo }}</p>
-            <p>Marca: {{ moto.marca }}</p>
-            <p>Placa: {{ moto.placa }}</p>
-            
-            <form method="post">
-                {% csrf_token %}
-            
-                <input
-                    type="hidden"
-                    name="moto_id"
-                    value="{{ moto.id_moto }}"
-                >
-            
-                <button
-                    type="submit"
-                    name="acao"
-                    value="selecionar_moto"
-                >
-                    Abrir ordem de serviço
-                </button>
-            </form>
-            
-            <a href="{% url 'editar_moto' moto.id_moto %}">
-                Editar moto
-            </a>
-        
-        
-        
-        {% else %}
-            <p>Nenhuma moto encontrada para esta placa.</p>
-        
-            <h3>Cliente</h3>
-        
+        <div class="card-body">
             <p>
-                Informe o celular do cliente para continuar o cadastro:
+                Informe o celular do cliente ou a placa da moto
+                para localizar um cadastro existente ou iniciar um novo.
             </p>
-        
-            <form method="post">
+
+            {% if erro %}
+                <div class="alert alert-danger" role="alert">
+                    {{ erro }}
+                </div>
+            {% endif %}
+
+            <form method="post" class="mb-3">
                 {% csrf_token %}
-        
-                <input
-                    type="hidden"
-                    name="acao"
-                    value="buscar_cliente_para_nova_moto"
-                >
-        
-                <input
-                    type="hidden"
-                    name="placa"
-                    value="{{ valor_busca }}"
-                >
-        
-                <label for="celular_cliente">
-                    Celular:
-                </label>
-        
-                <input
-                    type="text"
-                    id="celular_cliente"
-                    name="celular"
-                    required
-                    maxlength="20"
-                >
-        
-                <button type="submit">
-                    Continuar
+
+                <div class="mb-3">
+                    <label for="busca" class="form-label">
+                        Celular do cliente ou placa da moto
+                    </label>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="busca"
+                        name="busca"
+                        required
+                        maxlength="20"
+                        autocomplete="off"
+                        placeholder="Digite o celular ou a placa"
+                    >
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    Buscar cadastro
                 </button>
             </form>
-        {% endif %}
 
-    {% endif %}
-{% endif %}
+            {% if tipo_busca %}
+                <hr class="my-4">
 
-<hr>
+                {% if tipo_busca == "celular" %}
+                    <section aria-labelledby="titulo-busca-celular">
+                        <h3 id="titulo-busca-celular" class="h5 mb-3">
+                            Resultado da busca por celular
+                        </h3>
 
-<h2>Consultar ordens de serviço</h2>
+                        {% if cliente %}
+                            <div class="border rounded p-3 mb-3">
+                                <h4 class="h6">Cliente encontrado</h4>
 
-<p>
-    <a href="{% url 'ultimas_ordens' %}">
-        Últimas ordens de serviço
-    </a>
-</p>
+                                <dl class="row mb-3">
+                                    <dt class="col-sm-3">Nome</dt>
+                                    <dd class="col-sm-9">{{ cliente.nome }}</dd>
 
-<p>
-    <a href="{% url 'buscar_ordem_placa' %}">
-        Buscar ordem por placa
-    </a>
-</p>
+                                    <dt class="col-sm-3">Celular</dt>
+                                    <dd class="col-sm-9">{{ cliente.numero_celular }}</dd>
+                                </dl>
 
-<p>
-    <a href="{% url 'buscar_ordens_filtros' %}">
-        Buscar ordens com filtros
-    </a>
-</p>
+                                <a
+                                    href="{% url 'editar_cliente' cliente.id_cliente %}"
+                                    class="btn btn-outline-primary btn-sm"
+                                >
+                                    Editar cliente
+                                </a>
+                            </div>
+
+                            <section aria-labelledby="titulo-motos">
+                                <h4 id="titulo-motos" class="h5 mb-3">
+                                    Motos cadastradas
+                                </h4>
+
+                                {% if motos %}
+                                    <ul class="list-group mb-3">
+                                        {% for moto in motos %}
+                                            <li class="list-group-item">
+                                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                                    <div>
+                                                        <h5 class="h6 mb-1">
+                                                            {{ moto.marca }} {{ moto.modelo }}
+                                                        </h5>
+                                                        <p class="text-body-secondary mb-0">
+                                                            Placa: {{ moto.placa }}
+                                                        </p>
+                                                    </div>
+
+                                                    <div class="d-flex flex-wrap gap-2">
+                                                        <form method="post">
+                                                            {% csrf_token %}
+                                                            <input
+                                                                type="hidden"
+                                                                name="moto_id"
+                                                                value="{{ moto.id_moto }}"
+                                                            >
+                                                            <input
+                                                                type="hidden"
+                                                                name="cliente_id"
+                                                                value="{{ cliente.id_cliente }}"
+                                                            >
+                                                            <button
+                                                                type="submit"
+                                                                name="acao"
+                                                                value="selecionar_moto"
+                                                                class="btn btn-primary btn-sm"
+                                                            >
+                                                                Abrir ordem de serviço
+                                                            </button>
+                                                        </form>
+
+                                                        <a
+                                                            href="{% url 'editar_moto' moto.id_moto %}"
+                                                            class="btn btn-outline-secondary btn-sm"
+                                                        >
+                                                            Editar moto
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-body-secondary">
+                                        Este cliente ainda não possui motos cadastradas.
+                                    </p>
+                                {% endif %}
+
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="acao" value="nova_moto">
+                                    <input
+                                        type="hidden"
+                                        name="cliente_id"
+                                        value="{{ cliente.id_cliente }}"
+                                    >
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        Cadastrar nova moto
+                                    </button>
+                                </form>
+                            </section>
+                        {% else %}
+                            <div class="alert alert-info" role="status">
+                                Nenhum cliente encontrado para este celular.
+                            </div>
+
+                            <form method="post">
+                                {% csrf_token %}
+                                <input type="hidden" name="acao" value="novo_cliente">
+                                <input
+                                    type="hidden"
+                                    name="celular"
+                                    value="{{ celular_buscado }}"
+                                >
+                                <button type="submit" class="btn btn-primary">
+                                    Cadastrar novo cliente
+                                </button>
+                            </form>
+                        {% endif %}
+                    </section>
+
+                {% elif tipo_busca == "placa" %}
+                    <section aria-labelledby="titulo-busca-placa">
+                        <h3 id="titulo-busca-placa" class="h5 mb-3">
+                            Resultado da busca por placa
+                        </h3>
+
+                        {% if moto %}
+                            <div class="row g-3">
+                                <div class="col-12 col-lg-6">
+                                    <div class="border rounded p-3 h-100">
+                                        <h4 class="h6">Cliente vinculado</h4>
+
+                                        <dl class="row mb-3">
+                                            <dt class="col-sm-4">Nome</dt>
+                                            <dd class="col-sm-8">
+                                                {{ moto.cliente.nome }}
+                                            </dd>
+
+                                            <dt class="col-sm-4">Celular</dt>
+                                            <dd class="col-sm-8">
+                                                {{ moto.cliente.numero_celular }}
+                                            </dd>
+                                        </dl>
+
+                                        <a
+                                            href="{% url 'editar_cliente' moto.cliente.id_cliente %}"
+                                            class="btn btn-outline-primary btn-sm"
+                                        >
+                                            Editar cliente
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="col-12 col-lg-6">
+                                    <div class="border rounded p-3 h-100">
+                                        <h4 class="h6">Moto encontrada</h4>
+
+                                        <dl class="row mb-3">
+                                            <dt class="col-sm-4">Modelo</dt>
+                                            <dd class="col-sm-8">{{ moto.modelo }}</dd>
+
+                                            <dt class="col-sm-4">Marca</dt>
+                                            <dd class="col-sm-8">{{ moto.marca }}</dd>
+
+                                            <dt class="col-sm-4">Placa</dt>
+                                            <dd class="col-sm-8">{{ moto.placa }}</dd>
+                                        </dl>
+
+                                        <div class="d-flex flex-wrap gap-2">
+                                            <form method="post">
+                                                {% csrf_token %}
+                                                <input
+                                                    type="hidden"
+                                                    name="moto_id"
+                                                    value="{{ moto.id_moto }}"
+                                                >
+                                                <button
+                                                    type="submit"
+                                                    name="acao"
+                                                    value="selecionar_moto"
+                                                    class="btn btn-primary btn-sm"
+                                                >
+                                                    Abrir ordem de serviço
+                                                </button>
+                                            </form>
+
+                                            <a
+                                                href="{% url 'editar_moto' moto.id_moto %}"
+                                                class="btn btn-outline-secondary btn-sm"
+                                            >
+                                                Editar moto
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info" role="status">
+                                Nenhuma moto encontrada para esta placa.
+                            </div>
+
+                            <section aria-labelledby="titulo-localizar-cliente">
+                                <h4 id="titulo-localizar-cliente" class="h5">
+                                    Localizar cliente para cadastrar a moto
+                                </h4>
+
+                                <p>
+                                    Informe o celular do cliente ao qual
+                                    a moto será vinculada.
+                                </p>
+
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input
+                                        type="hidden"
+                                        name="acao"
+                                        value="buscar_cliente_para_nova_moto"
+                                    >
+                                    <input
+                                        type="hidden"
+                                        name="placa"
+                                        value="{{ valor_busca }}"
+                                    >
+
+                                    <div class="mb-3">
+                                        <label for="celular_cliente" class="form-label">
+                                            Celular do cliente
+                                        </label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="celular_cliente"
+                                            name="celular"
+                                            required
+                                            maxlength="20"
+                                            autocomplete="tel"
+                                        >
+                                    </div>
+
+                                    <button type="submit" class="btn btn-primary">
+                                        Continuar
+                                    </button>
+                                </form>
+                            </section>
+                        {% endif %}
+                    </section>
+                {% endif %}
+            {% endif %}
+        </div>
+    </section>
+
+   
+    <section class="card shadow-sm mb-4" aria-labelledby="titulo-consultas">
+        <div class="card-header">
+            <h2 id="titulo-consultas" class="h4 mb-0">
+                2. Consultar ordens de serviço
+            </h2>
+        </div>
+
+        <div class="card-body">
+            <p>
+                Acesse as ferramentas de consulta para acompanhar ordens
+                recentes, localizar serviços pela placa ou combinar filtros.
+            </p>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <h3 class="h5">Ordens recentes</h3>
+                        <p class="text-body-secondary">
+                            Consulte as últimas ordens de serviço registradas.
+                        </p>
+                        <a
+                            href="{% url 'ultimas_ordens' %}"
+                            class="btn btn-primary mt-2"
+                        >
+                            Ver últimas ordens
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <h3 class="h5">Busca por placa</h3>
+                        <p class="text-body-secondary">
+                            Localize ordens de serviço associadas a uma moto.
+                        </p>
+                        <a
+                            href="{% url 'buscar_ordem_placa' %}"
+                            class="btn btn-primary mt-2"
+                        >
+                            Buscar por placa
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="border rounded p-3 h-100">
+                        <h3 class="h5">Busca com filtros</h3>
+                        <p class="text-body-secondary">
+                            Refine a consulta usando os filtros disponíveis.
+                        </p>
+                        <a
+                            href="{% url 'buscar_ordens_filtros' %}"
+                            class="btn btn-primary mt-2"
+                        >
+                            Buscar com filtros
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 
 {% endblock %}

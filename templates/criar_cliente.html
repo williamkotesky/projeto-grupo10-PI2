@@ -1,17 +1,43 @@
+
 {% extends "base.html" %}
 
 {% block title %}Cadastrar cliente{% endblock %}
 
 {% block content %}
 
-<h1>Cadastrar cliente</h1>
+<div class="container py-4">
+    <header class="mb-4">
+        <h1 class="mb-2">Cadastrar cliente</h1>
+        <p class="text-body-secondary mb-0">
+            Preencha os dados para registrar um novo cliente no sistema.
+        </p>
+    </header>
 
-<form method="post">
-    {% csrf_token %}
+    <section class="card shadow-sm" aria-labelledby="titulo-formulario">
+        <div class="card-header">
+            <h2 id="titulo-formulario" class="h5 mb-0">
+                Dados do cliente
+            </h2>
+        </div>
 
-    {{ form.as_p }}
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
 
-    <button type="submit">Cadastrar cliente</button>
-</form>
+                {{ form.as_p }}
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary">
+                        Cadastrar cliente
+                    </button>
+
+                    <a href="{% url 'atendimento' %}" class="btn btn-outline-secondary">
+                        Voltar ao atendimento
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
 
 {% endblock %}

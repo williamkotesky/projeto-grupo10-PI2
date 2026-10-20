@@ -73,19 +73,221 @@ main {
     padding: 2rem;
 }
 
-nav {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 1rem 2rem;
-    background-color: #3a74b2
+
+:root {
+    --cor-primaria: #3a74b2;
+    --cor-primaria-hover: #2e6096;
+    --cor-fundo: #f4f7fb;
+    --cor-superficie: #ffffff;
+    --cor-texto: #263445;
+    --cor-texto-suave: #526174;
+    --cor-borda: #dce4ee;
 }
 
-nav ul {
-    display: flex;
-    gap: 1rem;
+body.fundo-oficina {
+    min-height: 100vh;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height: 1.6;
 }
 
-nav a {
-    color: #fff;
+.navbar-oficina {
+    background-color: var(--cor-primaria);
 }
+
+.navbar-oficina .navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.2px;
+}
+
+.navbar-oficina .nav-link {
+    color: #ffffff;
+}
+
+.navbar-oficina .nav-link:hover,
+.navbar-oficina .nav-link:focus {
+    color: #e2edfa;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--cor-primaria);
+    --bs-btn-border-color: var(--cor-primaria);
+    --bs-btn-hover-bg: var(--cor-primaria-hover);
+    --bs-btn-hover-border-color: var(--cor-primaria-hover);
+    --bs-btn-active-bg: var(--cor-primaria-hover);
+    --bs-btn-active-border-color: var(--cor-primaria-hover);
+    --bs-btn-focus-shadow-rgb: 58, 116, 178;
+}
+
+a {
+    color: var(--cor-primaria);
+}
+
+a:hover {
+    color: var(--cor-primaria-hover);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--cor-primaria);
+    box-shadow: 0 0 0 0.25rem rgb(58 116 178 / 20%);
+}
+
+.card,
+.superficie-oficina {
+    background-color: var(--cor-superficie);
+    border: 1px solid var(--cor-borda);
+    border-radius: 0.75rem;
+}
+
+:focus-visible {
+    outline: 3px solid #174d83;
+    outline-offset: 3px;
+}
+
+
+@media (max-width: 767.98px) {
+    main.container {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    .btn {
+        min-height: 42px;
+    }
+
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}
+
+
+.home-page {
+    max-width: 1000px;
+    margin-inline: auto;
+}
+
+.home-intro {
+    padding-block: 1rem;
+}
+
+.home-intro h1 {
+    color: var(--cor-texto);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+}
+
+.home-page .card {
+    border-color: var(--cor-borda);
+}
+
+.home-page .card-body {
+    min-width: 0;
+}
+
+.home-page .form-control {
+    min-height: 48px;
+}
+
+.home-page .form-text {
+    color: var(--cor-texto-suave);
+}
+
+.font-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.font-controls .btn {
+    min-width: 44px;
+    min-height: 44px;
+    font-weight: 700;
+}
+
+.cost-item {
+    padding: 1rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: 0.65rem;
+    background-color: var(--cor-fundo);
+    overflow-wrap: anywhere;
+}
+
+.cost-total {
+    background-color: #e7f0fa;
+    border-color: #b8d0eb;
+    color: #244f7c;
+}
+
+.home-page dt {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 575.98px) {
+    .home-intro h1 {
+        font-size: 1.9rem;
+    }
+
+    .home-page .card-body {
+        padding: 1rem !important;
+    }
+
+    .home-page .btn-lg {
+        width: 100%;
+    }
+
+    .font-controls {
+        width: 100%;
+    }
+
+    .font-controls .btn {
+        flex: 1;
+    }
+}
+
+
+.home-page {
+    --escala-fonte: 1;
+}
+
+
+.home-page.fonte-ajustada {
+    font-size: calc(1rem * var(--escala-fonte));
+}
+
+.home-page.fonte-ajustada p,
+.home-page.fonte-ajustada label,
+.home-page.fonte-ajustada input,
+.home-page.fonte-ajustada button,
+.home-page.fonte-ajustada .form-text {
+    font-size: calc(1rem * var(--escala-fonte));
+}
+
+.home-page.fonte-ajustada h1 {
+    font-size: calc(2.5rem * var(--escala-fonte));
+    line-height: 1.2;
+}
+
+.home-page.fonte-ajustada h2 {
+    font-size: calc(1.75rem * var(--escala-fonte));
+    line-height: 1.3;
+}
+
+
+.home-page.fonte-ajustada h3 {
+    font-size: calc(1.35rem * var(--escala-fonte));
+    line-height: 1.4;
+}
+
+
+@media (max-width: 576px) {
+    .home-page.fonte-ajustada h1 {
+        font-size: calc(2rem * var(--escala-fonte));
+    }
+
+    .home-page.fonte-ajustada h2 {
+        font-size: calc(1.5rem * var(--escala-fonte));
+    }
+}
+
