@@ -1,4 +1,4 @@
-# Oficina MP Motos 🏍️
+# Oficina MP Motos 
 
 Sistema web para gerenciamento de ordens de serviço de uma oficina de motos, Projeto de Integração II, grupo 10 da UNIVESP. A aplicação permite organizar clientes, motos e serviços, facilitando o acompanhamento dos atendimentos e a consulta do andamento dos reparos.
 
